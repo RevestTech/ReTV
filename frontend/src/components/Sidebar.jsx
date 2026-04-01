@@ -7,11 +7,31 @@ export default function Sidebar({
   activeCountry,
   onSelectCategory,
   onSelectCountry,
+  favoritesCount,
+  showFavorites,
+  onToggleFavorites,
 }) {
   const [tab, setTab] = useState("categories");
 
   return (
     <aside className="sidebar">
+      <div className="sidebar-section">
+        <div
+          className={`sidebar-item favorites-item ${showFavorites ? "active" : ""}`}
+          onClick={onToggleFavorites}
+        >
+          <span className="favorites-label">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill={showFavorites ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+            Favorites
+          </span>
+          {favoritesCount > 0 && (
+            <span className="sidebar-count favorites-count">{favoritesCount}</span>
+          )}
+        </div>
+      </div>
+
       <div style={{ display: "flex", gap: "4px", padding: "0 12px", marginBottom: "16px" }}>
         <TabButton active={tab === "categories"} onClick={() => setTab("categories")}>
           Categories
@@ -25,7 +45,7 @@ export default function Sidebar({
         <div className="sidebar-section">
           <div className="sidebar-title">Categories</div>
           <div
-            className={`sidebar-item ${!activeCategory ? "active" : ""}`}
+            className={`sidebar-item ${!activeCategory && !showFavorites ? "active" : ""}`}
             onClick={() => onSelectCategory(null)}
           >
             <span>All Categories</span>
@@ -47,7 +67,7 @@ export default function Sidebar({
         <div className="sidebar-section">
           <div className="sidebar-title">Countries</div>
           <div
-            className={`sidebar-item ${!activeCountry ? "active" : ""}`}
+            className={`sidebar-item ${!activeCountry && !showFavorites ? "active" : ""}`}
             onClick={() => onSelectCountry(null)}
           >
             <span>All Countries</span>

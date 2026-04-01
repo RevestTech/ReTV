@@ -3,6 +3,7 @@ import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import ChannelGrid from "./components/ChannelGrid";
 import VideoPlayer from "./components/VideoPlayer";
+import useFavorites from "./hooks/useFavorites";
 import { fetchChannels, fetchCategories, fetchCountries, fetchStats } from "./api/channels";
 
 export default function App() {
@@ -16,11 +17,14 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState(null);
   const [activeCountry, setActiveCountry] = useState(null);
+  const [showFavorites, setShowFavorites] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [total, setTotal] = useState(0);
 
   const [selectedChannel, setSelectedChannel] = useState(null);
+
+  const { favoritesList, favoritesCount, toggleFavorite, isFavorite } = useFavorites();
 
   const loadMeta = useCallback(async () => {
     try {
@@ -33,11 +37,12 @@ export default function App() {
       setCountries(ctrs);
       setStats(st);
     } catch {
-      // Metadata fetch may fail during initial sync — that's okay
+      // Metadata fetch may fail during initial sync
     }
   }, []);
 
   const loadChannels = useCallback(async () => {
+    if (showFavorites) return;
     setLoading(true);
     setError(null);
     try {
@@ -50,12 +55,12 @@ export default function App() {
       setChannels(data.channels);
       setTotalPages(data.total_pages);
       setTotal(data.total);
-    } catch (e) {
+    } catch {
       setError("Unable to load channels. The server may still be syncing data — try again in a moment.");
     } finally {
       setLoading(false);
     }
-  }, [search, activeCategory, activeCountry, page]);
+  }, [search, activeCategory, activeCountry, page, showFavorites]);
 
   useEffect(() => {
     loadMeta();
@@ -69,41 +74,68 @@ export default function App() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, activeCategory, activeCountry]);
+  }, [search, activeCategory, activeCountry, showFavorites]);
+
+  const displayedChannels = showFavorites ? favoritesList : channels;
+  const displayedTotal = showFavorites ? favoritesCount : total;
+  const displayedTotalPages = showFavorites ? 1 : totalPages;
 
   const clearFilter = (type) => {
     if (type === "category") setActiveCategory(null);
     if (type === "country") setActiveCountry(null);
     if (type === "search") setSearch("");
+    if (type === "favorites") setShowFavorites(false);
+  };
+
+  const handleToggleFavorites = () => {
+    setShowFavorites((prev) => !prev);
+    if (!showFavorites) {
+      setActiveCategory(null);
+      setActiveCountry(null);
+      setSearch("");
+    }
   };
 
   return (
     <>
-      <Header search={search} onSearch={setSearch} stats={stats} />
+      <Header
+        search={search}
+        onSearch={(val) => { setSearch(val); setShowFavorites(false); }}
+        stats={stats}
+        favoritesCount={favoritesCount}
+        showFavorites={showFavorites}
+        onToggleFavorites={handleToggleFavorites}
+      />
       <div className="layout">
         <Sidebar
           categories={categories}
           countries={countries}
           activeCategory={activeCategory}
           activeCountry={activeCountry}
-          onSelectCategory={(id) => setActiveCategory(id === activeCategory ? null : id)}
-          onSelectCountry={(code) => setActiveCountry(code === activeCountry ? null : code)}
+          onSelectCategory={(id) => { setActiveCategory(id === activeCategory ? null : id); setShowFavorites(false); }}
+          onSelectCountry={(code) => { setActiveCountry(code === activeCountry ? null : code); setShowFavorites(false); }}
+          favoritesCount={favoritesCount}
+          showFavorites={showFavorites}
+          onToggleFavorites={handleToggleFavorites}
         />
         <main className="main-content">
           <ChannelGrid
-            channels={channels}
-            loading={loading}
-            error={error}
-            total={total}
+            channels={displayedChannels}
+            loading={!showFavorites && loading}
+            error={!showFavorites ? error : null}
+            total={displayedTotal}
             page={page}
-            totalPages={totalPages}
+            totalPages={displayedTotalPages}
             onPageChange={setPage}
             onSelect={setSelectedChannel}
             activeCategory={activeCategory}
             activeCountry={activeCountry}
             search={search}
+            showFavorites={showFavorites}
             onClearFilter={clearFilter}
             onRetry={loadChannels}
+            isFavorite={isFavorite}
+            onToggleFavorite={toggleFavorite}
           />
         </main>
       </div>
@@ -111,6 +143,8 @@ export default function App() {
         <VideoPlayer
           channel={selectedChannel}
           onClose={() => setSelectedChannel(null)}
+          isFavorite={isFavorite(selectedChannel.id)}
+          onToggleFavorite={() => toggleFavorite(selectedChannel)}
         />
       )}
     </>

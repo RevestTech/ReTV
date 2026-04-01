@@ -10,10 +10,13 @@ export default function ChannelGrid({
   activeCategory,
   activeCountry,
   search,
+  showFavorites,
   onClearFilter,
   onRetry,
+  isFavorite,
+  onToggleFavorite,
 }) {
-  const hasFilters = activeCategory || activeCountry || search;
+  const hasFilters = activeCategory || activeCountry || search || showFavorites;
 
   if (loading) {
     return (
@@ -44,19 +47,32 @@ export default function ChannelGrid({
     );
   }
 
+  const title = showFavorites
+    ? "Favorites"
+    : search
+      ? `Results for "${search}"`
+      : activeCategory || activeCountry
+        ? "Filtered Channels"
+        : "All Channels";
+
   return (
     <>
       <div className="content-header">
         <div>
-          <h2 className="content-title">
-            {search ? `Results for "${search}"` : activeCategory || activeCountry ? "Filtered Channels" : "All Channels"}
-          </h2>
-          <span className="content-subtitle">{total.toLocaleString()} channels found</span>
+          <h2 className="content-title">{title}</h2>
+          <span className="content-subtitle">
+            {total.toLocaleString()} {showFavorites ? "saved" : ""} channel{total !== 1 ? "s" : ""}{!showFavorites ? " found" : ""}
+          </span>
         </div>
       </div>
 
       {hasFilters && (
         <div className="active-filters">
+          {showFavorites && (
+            <span className="filter-tag" onClick={() => onClearFilter("favorites")}>
+              Favorites ✕
+            </span>
+          )}
           {search && (
             <span className="filter-tag" onClick={() => onClearFilter("search")}>
               Search: {search} ✕
@@ -77,18 +93,28 @@ export default function ChannelGrid({
 
       {channels.length === 0 ? (
         <div className="empty-state">
-          <h3>No channels found</h3>
-          <p>Try adjusting your search or filters, or wait for data sync to complete.</p>
+          <h3>{showFavorites ? "No favorites yet" : "No channels found"}</h3>
+          <p>
+            {showFavorites
+              ? "Click the heart icon on any channel to add it to your favorites."
+              : "Try adjusting your search or filters, or wait for data sync to complete."}
+          </p>
         </div>
       ) : (
         <>
           <div className="channel-grid">
             {channels.map((ch) => (
-              <ChannelCard key={ch.id} channel={ch} onClick={() => onSelect(ch)} />
+              <ChannelCard
+                key={ch.id}
+                channel={ch}
+                onClick={() => onSelect(ch)}
+                favorited={isFavorite(ch.id)}
+                onToggleFavorite={(e) => { e.stopPropagation(); onToggleFavorite(ch); }}
+              />
             ))}
           </div>
 
-          {totalPages > 1 && (
+          {!showFavorites && totalPages > 1 && (
             <div className="pagination">
               <button disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
                 ← Prev
@@ -107,11 +133,20 @@ export default function ChannelGrid({
   );
 }
 
-function ChannelCard({ channel, onClick }) {
+function ChannelCard({ channel, onClick, favorited, onToggleFavorite }) {
   const cats = channel.categories ? channel.categories.split(";").filter(Boolean) : [];
 
   return (
     <div className="channel-card" onClick={onClick}>
+      <button
+        className={`favorite-btn ${favorited ? "favorited" : ""}`}
+        onClick={onToggleFavorite}
+        title={favorited ? "Remove from favorites" : "Add to favorites"}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+        </svg>
+      </button>
       {channel.logo ? (
         <img
           className="channel-logo"
