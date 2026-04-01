@@ -207,7 +207,9 @@ function ChannelCard({ channel, onClick, favorited, onToggleFavorite, isGuest })
         className="channel-logo-placeholder"
         style={channel.logo ? { display: "none" } : {}}
       >
-        {channel.name.charAt(0).toUpperCase()}
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="7" width="20" height="15" rx="2" ry="2" /><polyline points="17 2 12 7 7 2" />
+        </svg>
       </div>
       <div className="channel-name" title={channel.name}>
         {channel.name}
@@ -251,7 +253,9 @@ function ChannelRow({ channel, onClick, favorited, onToggleFavorite, isGuest }) 
           className="list-row-logo-placeholder"
           style={channel.logo ? { display: "none" } : {}}
         >
-          {channel.name.charAt(0).toUpperCase()}
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="7" width="20" height="15" rx="2" ry="2" /><polyline points="17 2 12 7 7 2" />
+          </svg>
         </div>
       </div>
       <div className="list-row-info">
@@ -263,25 +267,25 @@ function ChannelRow({ channel, onClick, favorited, onToggleFavorite, isGuest }) 
           ))}
         </div>
       </div>
-      <div className="list-row-status">
+      <div className="list-row-actions">
         {channel.stream_url && (
           <span className={`channel-stream-badge ${channel.health_status === "online" ? "status-online" : channel.health_status === "offline" || channel.health_status === "error" ? "status-offline" : channel.health_status === "timeout" ? "status-timeout" : ""}`}>
             <span className={`status-dot ${channel.health_status}`} />
             {channel.health_status === "online" ? "LIVE" : channel.health_status === "offline" || channel.health_status === "error" ? "DOWN" : channel.health_status === "timeout" ? "SLOW" : "LIVE"}
           </span>
         )}
+        {!isGuest && (
+          <button
+            className={`favorite-btn list-fav-btn ${favorited ? "favorited" : ""}`}
+            onClick={onToggleFavorite}
+            title={favorited ? "Remove from favorites" : "Add to favorites"}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+          </button>
+        )}
       </div>
-      {!isGuest && (
-        <button
-          className={`favorite-btn list-fav-btn ${favorited ? "favorited" : ""}`}
-          onClick={onToggleFavorite}
-          title={favorited ? "Remove from favorites" : "Add to favorites"}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-          </svg>
-        </button>
-      )}
     </div>
   );
 }
@@ -307,7 +311,9 @@ function ChannelThumb({ channel, onClick, favorited, onToggleFavorite, isGuest }
           className="thumb-placeholder"
           style={channel.logo ? { display: "none" } : {}}
         >
-          {channel.name.charAt(0).toUpperCase()}
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="7" width="20" height="15" rx="2" ry="2" /><polyline points="17 2 12 7 7 2" />
+          </svg>
         </div>
         {channel.stream_url && (
           <span className={`thumb-status ${channel.health_status === "offline" || channel.health_status === "error" ? "down" : ""}`}>

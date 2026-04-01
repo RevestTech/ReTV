@@ -279,23 +279,23 @@ function RadioRow({ station, onClick, favorited, onToggleFavorite, isGuest }) {
           {station.bitrate > 0 && <span className="channel-tag">{station.bitrate}k</span>}
         </div>
       </div>
-      <div className="list-row-status">
+      <div className="list-row-actions">
         <span className={`channel-stream-badge ${station.last_check_ok ? "status-online" : "status-offline"}`}>
           <span className={`status-dot ${station.last_check_ok ? "online" : "offline"}`} />
           {station.last_check_ok ? "ON AIR" : "DOWN"}
         </span>
+        {!isGuest && (
+          <button
+            className={`favorite-btn list-fav-btn ${favorited ? "favorited" : ""}`}
+            onClick={onToggleFavorite}
+            title={favorited ? "Remove from favorites" : "Add to favorites"}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+          </button>
+        )}
       </div>
-      {!isGuest && (
-        <button
-          className={`favorite-btn list-fav-btn ${favorited ? "favorited" : ""}`}
-          onClick={onToggleFavorite}
-          title={favorited ? "Remove from favorites" : "Add to favorites"}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-          </svg>
-        </button>
-      )}
     </div>
   );
 }
