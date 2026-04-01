@@ -2,6 +2,7 @@ import { useState } from "react";
 
 export default function Sidebar({
   mode,
+  className,
   categories,
   countries,
   activeCategory,
@@ -23,7 +24,7 @@ export default function Sidebar({
 
   if (mode === "radio") {
     return (
-      <aside className="sidebar">
+      <aside className={`sidebar ${className || ""}`}>
         <div className="sidebar-section">
           <div
             className={`sidebar-item live-filter-item ${liveOnly ? "active" : ""}`}
@@ -96,7 +97,7 @@ export default function Sidebar({
   }
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${className || ""}`}>
       <div className="sidebar-section">
         <div
           className={`sidebar-item favorites-item ${showFavorites ? "active" : ""}`}

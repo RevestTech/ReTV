@@ -12,6 +12,7 @@ import { fetchRadioStations, fetchRadioTags, fetchRadioCountries } from "./api/r
 export default function App() {
   const [mode, setMode] = useState("tv");
   const [viewMode, setViewMode] = useState(() => localStorage.getItem("adajoon_view") || "grid");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleViewToggle = (v) => {
     setViewMode(v);
@@ -171,9 +172,13 @@ export default function App() {
           else setRadioSearch(val);
         }}
         stats={stats}
+        sidebarOpen={sidebarOpen}
+        onToggleSidebar={() => setSidebarOpen((v) => !v)}
       />
+      {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
       <div className="layout">
         <Sidebar
+          className={sidebarOpen ? "open" : ""}
           mode={mode}
           categories={categories}
           countries={mode === "tv" ? countries : []}

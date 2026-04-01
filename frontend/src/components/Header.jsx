@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 export default function Header({
   mode, onModeSwitch,
   search, onSearch, stats,
+  sidebarOpen, onToggleSidebar,
 }) {
   const [localSearch, setLocalSearch] = useState(search);
   const debounceRef = useRef(null);
@@ -20,6 +21,14 @@ export default function Header({
 
   return (
     <header className="header">
+      <button className="menu-btn" onClick={onToggleSidebar} aria-label="Toggle menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          {sidebarOpen
+            ? <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>
+            : <><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></>
+          }
+        </svg>
+      </button>
       <div className="logo">
         Ada<span>joon</span>
       </div>
