@@ -695,6 +695,30 @@ body {
   white-space: nowrap;
 }
 
+.live-filter-btn {
+  padding: 0 16px;
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.live-dot.on {
+  background: #00e676;
+  box-shadow: 0 0 6px rgba(0, 230, 118, 0.6);
+  animation: live-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%, 100% { box-shadow: 0 0 4px rgba(0, 230, 118, 0.4); }
+  50% { box-shadow: 0 0 10px rgba(0, 230, 118, 0.8); }
+}
+
 .header-favorites-count {
   position: absolute;
   top: -6px;

@@ -65,16 +65,18 @@ export default function Header({
       </div>
 
       <button
-        className={`header-toggle-btn ${liveOnly ? "active" : ""}`}
+        className={`header-toggle-btn live-filter-btn ${liveOnly ? "active" : ""}`}
         onClick={onToggleLiveOnly}
-        title={mode === "tv" ? (liveOnly ? "Showing live only" : "Show all") : (liveOnly ? "Working only" : "Show all")}
+        title={mode === "tv"
+          ? (liveOnly ? "Showing only channels with active streams" : "Click to hide offline channels")
+          : (liveOnly ? "Showing only verified working stations" : "Click to hide offline stations")}
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="2" />
-          <path d="M16.24 7.76a6 6 0 0 1 0 8.49" />
-          <path d="M7.76 16.24a6 6 0 0 1 0-8.49" />
-        </svg>
-        <span className="header-toggle-label">{liveOnly ? (mode === "tv" ? "Live" : "Working") : "All"}</span>
+        <span className={`live-dot ${liveOnly ? "on" : ""}`} />
+        <span className="header-toggle-label">
+          {liveOnly
+            ? (mode === "tv" ? "Live Channels Only" : "Working Stations Only")
+            : (mode === "tv" ? "Show Live Only" : "Show Working Only")}
+        </span>
       </button>
 
       {mode === "tv" && (
