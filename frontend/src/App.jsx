@@ -12,7 +12,7 @@ import { useAuth } from "./hooks/useAuth";
 import { fetchChannels, fetchCategories, fetchCountries, fetchStats } from "./api/channels";
 import { fetchRadioStations, fetchRadioTags, fetchRadioCountries } from "./api/radio";
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
+const GOOGLE_CLIENT_ID = "735750557405-01nak31482018qbfu1sigov94c1k4ca7.apps.googleusercontent.com";
 
 export default function App() {
   const [mode, setMode] = useState("tv");
