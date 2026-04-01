@@ -11,6 +11,12 @@ import { fetchRadioStations, fetchRadioTags, fetchRadioCountries } from "./api/r
 
 export default function App() {
   const [mode, setMode] = useState("tv");
+  const [viewMode, setViewMode] = useState(() => localStorage.getItem("adajoon_view") || "grid");
+
+  const handleViewToggle = (v) => {
+    setViewMode(v);
+    localStorage.setItem("adajoon_view", v);
+  };
 
   // TV state
   const [channels, setChannels] = useState([]);
@@ -211,6 +217,8 @@ export default function App() {
               onRetry={loadChannels}
               isFavorite={isFavorite}
               onToggleFavorite={toggleFavorite}
+              viewMode={viewMode}
+              onViewToggle={handleViewToggle}
             />
           ) : (
             <RadioGrid
@@ -228,6 +236,8 @@ export default function App() {
               workingOnly={workingOnly}
               onClearFilter={clearFilter}
               onRetry={loadRadio}
+              viewMode={viewMode}
+              onViewToggle={handleViewToggle}
             />
           )}
         </main>

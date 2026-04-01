@@ -229,11 +229,134 @@ body {
   background: rgba(233, 69, 96, 0.25);
 }
 
+/* View Toggle */
+.view-toggle {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  flex-shrink: 0;
+}
+
+.view-toggle-btn {
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.view-toggle-btn:hover {
+  color: var(--text-primary);
+}
+
+.view-toggle-btn.active {
+  background: var(--accent);
+  color: #fff;
+}
+
 /* Channel Grid */
 .channel-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 16px;
+}
+
+/* Channel List */
+.channel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 16px;
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.list-row:hover {
+  background: var(--bg-hover);
+}
+
+.list-row-logo {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.list-row-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.list-row-logo-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 16px;
+  border-radius: 8px;
+}
+
+.list-row-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.list-row-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  margin-bottom: 3px;
+}
+
+.list-row-tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.list-row-status {
+  flex-shrink: 0;
+}
+
+.list-fav-btn {
+  position: static !important;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.list-row:hover .list-fav-btn {
+  opacity: 1;
+}
+
+.list-fav-btn.favorited {
+  opacity: 1;
 }
 
 .channel-card {
@@ -944,5 +1067,19 @@ body {
   .channel-grid {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 12px;
+  }
+
+  .list-row {
+    padding: 8px 12px;
+    gap: 10px;
+  }
+
+  .list-row-logo {
+    width: 32px;
+    height: 32px;
+  }
+
+  .list-row-name {
+    font-size: 13px;
   }
 }
