@@ -6,6 +6,7 @@ import RadioGrid from "./components/RadioGrid";
 import VideoPlayer from "./components/VideoPlayer";
 import RadioPlayer from "./components/RadioPlayer";
 import LoginModal from "./components/LoginModal";
+import FavoritesView from "./components/FavoritesView";
 import useFavorites, { useRadioFavorites } from "./hooks/useFavorites";
 import { useAuth } from "./hooks/useAuth";
 import { fetchChannels, fetchCategories, fetchCountries, fetchStats } from "./api/channels";
@@ -201,20 +202,20 @@ export default function App() {
     if (type === "category") setActiveCategory(null);
     if (type === "country") { if (mode === "tv") setActiveCountry(null); else setActiveRadioCountry(null); }
     if (type === "search") { if (mode === "tv") setSearch(""); else setRadioSearch(""); }
-    if (type === "favorites") { if (mode === "tv") setShowFavorites(false); else setShowRadioFavorites(false); }
+    if (type === "favorites") { setShowFavorites(false); setShowRadioFavorites(false); }
     if (type === "liveOnly") setLiveOnly(false);
     if (type === "tag") setActiveTag(null);
     if (type === "workingOnly") setWorkingOnly(false);
   };
 
   const handleToggleFavorites = () => {
-    setShowFavorites((prev) => !prev);
-    if (!showFavorites) { setActiveCategory(null); setActiveCountry(null); setSearch(""); }
-  };
-
-  const handleToggleRadioFavorites = () => {
-    setShowRadioFavorites((prev) => !prev);
-    if (!showRadioFavorites) { setActiveTag(null); setActiveRadioCountry(null); setRadioSearch(""); }
+    const turning_on = !showFavorites;
+    setShowFavorites(turning_on);
+    setShowRadioFavorites(turning_on);
+    if (turning_on) {
+      setActiveCategory(null); setActiveCountry(null); setSearch("");
+      setActiveTag(null); setActiveRadioCountry(null); setRadioSearch("");
+    }
   };
 
   const handleModeSwitch = (newMode) => {
@@ -254,9 +255,9 @@ export default function App() {
             if (mode === "tv") { setActiveCountry(code === activeCountry ? null : code); setShowFavorites(false); }
             else { setActiveRadioCountry(code === activeRadioCountry ? null : code); setShowRadioFavorites(false); }
           }}
-          favoritesCount={mode === "tv" ? favoritesCount : radioFavoritesCount}
-          showFavorites={mode === "tv" ? showFavorites : showRadioFavorites}
-          onToggleFavorites={mode === "tv" ? handleToggleFavorites : handleToggleRadioFavorites}
+          favoritesCount={favoritesCount + radioFavoritesCount}
+          showFavorites={showFavorites}
+          onToggleFavorites={handleToggleFavorites}
           radioTags={radioTags}
           radioCountries={radioCountries}
           activeTag={activeTag}
@@ -268,20 +269,32 @@ export default function App() {
           }}
         />
         <main className="main-content">
-          {mode === "tv" ? (
+          {showFavorites ? (
+            <FavoritesView
+              tvFavorites={favoritesList}
+              radioFavorites={radioFavoritesList}
+              onSelectChannel={setSelectedChannel}
+              onSelectStation={setSelectedStation}
+              isTvFavorite={isFavorite}
+              isRadioFavorite={isRadioFavorite}
+              onToggleTvFavorite={toggleFavorite}
+              onToggleRadioFavorite={toggleRadioFavorite}
+              onClearFavorites={() => { setShowFavorites(false); setShowRadioFavorites(false); }}
+            />
+          ) : mode === "tv" ? (
             <ChannelGrid
-              channels={displayedChannels}
-              loading={!showFavorites && loading}
-              error={!showFavorites ? error : null}
-              total={displayedTotal}
+              channels={channels}
+              loading={loading}
+              error={error}
+              total={total}
               page={page}
-              totalPages={displayedTotalPages}
+              totalPages={totalPages}
               onPageChange={setPage}
               onSelect={setSelectedChannel}
               activeCategory={activeCategory}
               activeCountry={activeCountry}
               search={search}
-              showFavorites={showFavorites}
+              showFavorites={false}
               liveOnly={liveOnly}
               onClearFilter={clearFilter}
               onRetry={loadChannels}
@@ -292,18 +305,18 @@ export default function App() {
             />
           ) : (
             <RadioGrid
-              stations={displayedRadioStations}
-              loading={!showRadioFavorites && radioLoading}
-              error={!showRadioFavorites ? radioError : null}
-              total={displayedRadioTotal}
+              stations={radioStations}
+              loading={radioLoading}
+              error={radioError}
+              total={radioTotal}
               page={radioPage}
-              totalPages={displayedRadioTotalPages}
+              totalPages={radioTotalPages}
               onPageChange={setRadioPage}
               onSelect={setSelectedStation}
               activeTag={activeTag}
               activeCountry={activeRadioCountry}
               search={radioSearch}
-              showFavorites={showRadioFavorites}
+              showFavorites={false}
               workingOnly={workingOnly}
               onClearFilter={clearFilter}
               onRetry={loadRadio}

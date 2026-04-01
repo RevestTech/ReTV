@@ -1595,6 +1595,129 @@ body {
   }
 }
 
+/* Favorites Two-Column View */
+.favorites-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.favorites-col {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.favorites-col-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border);
+}
+
+.favorites-col-count {
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--accent);
+  color: #fff;
+  padding: 1px 8px;
+  border-radius: 10px;
+  margin-left: auto;
+}
+
+.favorites-col-list {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 280px);
+  overflow-y: auto;
+}
+
+.fav-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.fav-row:last-child {
+  border-bottom: none;
+}
+
+.fav-row:hover {
+  background: var(--bg-hover);
+}
+
+.fav-row-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--bg-primary);
+}
+
+.fav-row-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.fav-row-logo-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-muted);
+  background: var(--bg-primary);
+}
+
+.fav-row-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.fav-row-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fav-row-tags {
+  display: flex;
+  gap: 4px;
+  margin-top: 3px;
+  flex-wrap: wrap;
+}
+
+.favorites-col-empty {
+  padding: 32px 20px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+@media (max-width: 768px) {
+  .favorites-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Auth / User Menu */
 .user-login-btn {
   display: flex;
