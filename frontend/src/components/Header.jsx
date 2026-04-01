@@ -3,8 +3,6 @@ import { useState, useRef, useEffect } from "react";
 export default function Header({
   mode, onModeSwitch,
   search, onSearch, stats,
-  favoritesCount, showFavorites, onToggleFavorites,
-  liveOnly, onToggleLiveOnly,
 }) {
   const [localSearch, setLocalSearch] = useState(search);
   const debounceRef = useRef(null);
@@ -63,34 +61,6 @@ export default function Header({
           onChange={handleChange}
         />
       </div>
-
-      <button
-        className={`header-toggle-btn live-filter-btn ${liveOnly ? "active" : ""}`}
-        onClick={onToggleLiveOnly}
-        title={mode === "tv"
-          ? (liveOnly ? "Showing only channels with active streams" : "Click to hide offline channels")
-          : (liveOnly ? "Showing only verified working stations" : "Click to hide offline stations")}
-      >
-        <span className={`live-dot ${liveOnly ? "on" : ""}`} />
-        <span className="header-toggle-label">
-          {liveOnly
-            ? (mode === "tv" ? "Live Channels Only" : "Working Stations Only")
-            : (mode === "tv" ? "Show Live Only" : "Show Working Only")}
-        </span>
-      </button>
-
-      {mode === "tv" && (
-        <button
-          className={`header-toggle-btn ${showFavorites ? "active" : ""}`}
-          onClick={onToggleFavorites}
-          title="Favorites"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill={showFavorites ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-          </svg>
-          {favoritesCount > 0 && <span className="header-favorites-count">{favoritesCount}</span>}
-        </button>
-      )}
 
       {stats && (
         <div className="header-stats">

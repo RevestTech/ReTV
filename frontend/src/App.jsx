@@ -165,14 +165,6 @@ export default function App() {
           else setRadioSearch(val);
         }}
         stats={stats}
-        favoritesCount={favoritesCount}
-        showFavorites={showFavorites}
-        onToggleFavorites={handleToggleFavorites}
-        liveOnly={mode === "tv" ? liveOnly : workingOnly}
-        onToggleLiveOnly={() => {
-          if (mode === "tv") setLiveOnly((v) => !v);
-          else setWorkingOnly((v) => !v);
-        }}
       />
       <div className="layout">
         <Sidebar
@@ -193,6 +185,11 @@ export default function App() {
           radioCountries={radioCountries}
           activeTag={activeTag}
           onSelectTag={(t) => setActiveTag(t === activeTag ? null : t)}
+          liveOnly={mode === "tv" ? liveOnly : workingOnly}
+          onToggleLiveOnly={() => {
+            if (mode === "tv") setLiveOnly((v) => !v);
+            else setWorkingOnly((v) => !v);
+          }}
         />
         <main className="main-content">
           {mode === "tv" ? (

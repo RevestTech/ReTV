@@ -11,6 +11,8 @@ export default function Sidebar({
   favoritesCount,
   showFavorites,
   onToggleFavorites,
+  liveOnly,
+  onToggleLiveOnly,
   radioTags,
   radioCountries,
   activeTag,
@@ -22,6 +24,21 @@ export default function Sidebar({
   if (mode === "radio") {
     return (
       <aside className="sidebar">
+        <div className="sidebar-section">
+          <div
+            className={`sidebar-item live-filter-item ${liveOnly ? "active" : ""}`}
+            onClick={onToggleLiveOnly}
+          >
+            <span className="live-filter-label">
+              <span className={`live-dot ${liveOnly ? "on" : ""}`} />
+              Working Stations Only
+            </span>
+            <span className="sidebar-count" style={{ fontSize: "10px", opacity: 0.7 }}>
+              {liveOnly ? "ON" : "OFF"}
+            </span>
+          </div>
+        </div>
+
         <div style={{ display: "flex", gap: "4px", padding: "0 12px", marginBottom: "16px" }}>
           <TabButton active={radioTab === "genres"} onClick={() => setRadioTab("genres")}>
             Genres
@@ -94,6 +111,18 @@ export default function Sidebar({
           {favoritesCount > 0 && (
             <span className="sidebar-count favorites-count">{favoritesCount}</span>
           )}
+        </div>
+        <div
+          className={`sidebar-item live-filter-item ${liveOnly ? "active" : ""}`}
+          onClick={onToggleLiveOnly}
+        >
+          <span className="live-filter-label">
+            <span className={`live-dot ${liveOnly ? "on" : ""}`} />
+            Live Channels Only
+          </span>
+          <span className="sidebar-count" style={{ fontSize: "10px", opacity: 0.7 }}>
+            {liveOnly ? "ON" : "OFF"}
+          </span>
         </div>
       </div>
 
