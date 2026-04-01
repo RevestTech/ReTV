@@ -60,6 +60,33 @@ class Channel(Base):
     )
 
 
+class RadioStation(Base):
+    __tablename__ = "radio_stations"
+
+    id = Column(String, primary_key=True)
+    name = Column(String(500), nullable=False, index=True)
+    url = Column(Text, default="")
+    url_resolved = Column(Text, default="")
+    homepage = Column(Text, default="")
+    favicon = Column(Text, default="")
+    tags = Column(Text, default="")
+    country = Column(String(255), default="")
+    country_code = Column(String(10), default="", index=True)
+    state = Column(String(255), default="")
+    language = Column(String(500), default="")
+    codec = Column(String(50), default="")
+    bitrate = Column(Integer, default=0)
+    votes = Column(Integer, default=0)
+    last_check_ok = Column(Boolean, default=False)
+    geo_lat = Column(String(50), default="")
+    geo_long = Column(String(50), default="")
+
+    __table_args__ = (
+        Index("ix_radio_name", "name"),
+        Index("ix_radio_country", "country_code"),
+    )
+
+
 class Stream(Base):
     __tablename__ = "streams"
 

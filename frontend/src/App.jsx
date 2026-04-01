@@ -2,18 +2,23 @@ import { useState, useEffect, useCallback } from "react";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import ChannelGrid from "./components/ChannelGrid";
+import RadioGrid from "./components/RadioGrid";
 import VideoPlayer from "./components/VideoPlayer";
+import RadioPlayer from "./components/RadioPlayer";
 import useFavorites from "./hooks/useFavorites";
 import { fetchChannels, fetchCategories, fetchCountries, fetchStats } from "./api/channels";
+import { fetchRadioStations, fetchRadioTags, fetchRadioCountries } from "./api/radio";
 
 export default function App() {
+  const [mode, setMode] = useState("tv");
+
+  // TV state
   const [channels, setChannels] = useState([]);
   const [categories, setCategories] = useState([]);
   const [countries, setCountries] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState(null);
   const [activeCountry, setActiveCountry] = useState(null);
@@ -22,26 +27,38 @@ export default function App() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [total, setTotal] = useState(0);
-
   const [selectedChannel, setSelectedChannel] = useState(null);
+
+  // Radio state
+  const [radioStations, setRadioStations] = useState([]);
+  const [radioTags, setRadioTags] = useState([]);
+  const [radioCountries, setRadioCountries] = useState([]);
+  const [radioLoading, setRadioLoading] = useState(true);
+  const [radioError, setRadioError] = useState(null);
+  const [radioSearch, setRadioSearch] = useState("");
+  const [activeTag, setActiveTag] = useState(null);
+  const [activeRadioCountry, setActiveRadioCountry] = useState(null);
+  const [workingOnly, setWorkingOnly] = useState(false);
+  const [radioPage, setRadioPage] = useState(1);
+  const [radioTotalPages, setRadioTotalPages] = useState(0);
+  const [radioTotal, setRadioTotal] = useState(0);
+  const [selectedStation, setSelectedStation] = useState(null);
 
   const { favoritesList, favoritesCount, toggleFavorite, isFavorite } = useFavorites();
 
+  // TV: load metadata
   const loadMeta = useCallback(async () => {
     try {
       const [cats, ctrs, st] = await Promise.all([
-        fetchCategories(),
-        fetchCountries(),
-        fetchStats(),
+        fetchCategories(), fetchCountries(), fetchStats(),
       ]);
       setCategories(cats);
       setCountries(ctrs);
       setStats(st);
-    } catch {
-      // Metadata fetch may fail during initial sync
-    }
+    } catch { /* retry later */ }
   }, []);
 
+  // TV: load channels
   const loadChannels = useCallback(async () => {
     if (showFavorites) return;
     setLoading(true);
@@ -58,11 +75,44 @@ export default function App() {
       setTotalPages(data.total_pages);
       setTotal(data.total);
     } catch {
-      setError("Unable to load channels. The server may still be syncing data — try again in a moment.");
+      setError("Unable to load channels. The server may still be syncing data.");
     } finally {
       setLoading(false);
     }
   }, [search, activeCategory, activeCountry, liveOnly, page, showFavorites]);
+
+  // Radio: load metadata
+  const loadRadioMeta = useCallback(async () => {
+    try {
+      const [tags, ctrs] = await Promise.all([
+        fetchRadioTags(), fetchRadioCountries(),
+      ]);
+      setRadioTags(tags);
+      setRadioCountries(ctrs);
+    } catch { /* retry later */ }
+  }, []);
+
+  // Radio: load stations
+  const loadRadio = useCallback(async () => {
+    setRadioLoading(true);
+    setRadioError(null);
+    try {
+      const data = await fetchRadioStations({
+        query: radioSearch || undefined,
+        tag: activeTag || undefined,
+        country: activeRadioCountry || undefined,
+        workingOnly: workingOnly || undefined,
+        page: radioPage,
+      });
+      setRadioStations(data.stations);
+      setRadioTotalPages(data.total_pages);
+      setRadioTotal(data.total);
+    } catch {
+      setRadioError("Unable to load radio stations. Data may still be syncing.");
+    } finally {
+      setRadioLoading(false);
+    }
+  }, [radioSearch, activeTag, activeRadioCountry, workingOnly, radioPage]);
 
   useEffect(() => {
     loadMeta();
@@ -70,13 +120,14 @@ export default function App() {
     return () => clearInterval(interval);
   }, [loadMeta]);
 
-  useEffect(() => {
-    loadChannels();
-  }, [loadChannels]);
+  useEffect(() => { loadChannels(); }, [loadChannels]);
+  useEffect(() => { setPage(1); }, [search, activeCategory, activeCountry, showFavorites, liveOnly]);
 
   useEffect(() => {
-    setPage(1);
-  }, [search, activeCategory, activeCountry, showFavorites, liveOnly]);
+    if (mode === "radio") { loadRadioMeta(); loadRadio(); }
+  }, [mode, loadRadioMeta, loadRadio]);
+
+  useEffect(() => { setRadioPage(1); }, [radioSearch, activeTag, activeRadioCountry, workingOnly]);
 
   const displayedChannels = showFavorites ? favoritesList : channels;
   const displayedTotal = showFavorites ? favoritesCount : total;
@@ -84,65 +135,104 @@ export default function App() {
 
   const clearFilter = (type) => {
     if (type === "category") setActiveCategory(null);
-    if (type === "country") setActiveCountry(null);
-    if (type === "search") setSearch("");
+    if (type === "country") { if (mode === "tv") setActiveCountry(null); else setActiveRadioCountry(null); }
+    if (type === "search") { if (mode === "tv") setSearch(""); else setRadioSearch(""); }
     if (type === "favorites") setShowFavorites(false);
     if (type === "liveOnly") setLiveOnly(false);
+    if (type === "tag") setActiveTag(null);
+    if (type === "workingOnly") setWorkingOnly(false);
   };
 
   const handleToggleFavorites = () => {
     setShowFavorites((prev) => !prev);
-    if (!showFavorites) {
-      setActiveCategory(null);
-      setActiveCountry(null);
-      setSearch("");
-    }
+    if (!showFavorites) { setActiveCategory(null); setActiveCountry(null); setSearch(""); }
+  };
+
+  const handleModeSwitch = (newMode) => {
+    setMode(newMode);
+    setSelectedChannel(null);
+    setSelectedStation(null);
   };
 
   return (
     <>
       <Header
-        search={search}
-        onSearch={(val) => { setSearch(val); setShowFavorites(false); }}
+        mode={mode}
+        onModeSwitch={handleModeSwitch}
+        search={mode === "tv" ? search : radioSearch}
+        onSearch={(val) => {
+          if (mode === "tv") { setSearch(val); setShowFavorites(false); }
+          else setRadioSearch(val);
+        }}
         stats={stats}
         favoritesCount={favoritesCount}
         showFavorites={showFavorites}
         onToggleFavorites={handleToggleFavorites}
-        liveOnly={liveOnly}
-        onToggleLiveOnly={() => setLiveOnly((v) => !v)}
+        liveOnly={mode === "tv" ? liveOnly : workingOnly}
+        onToggleLiveOnly={() => {
+          if (mode === "tv") setLiveOnly((v) => !v);
+          else setWorkingOnly((v) => !v);
+        }}
       />
       <div className="layout">
         <Sidebar
+          mode={mode}
           categories={categories}
-          countries={countries}
+          countries={mode === "tv" ? countries : []}
           activeCategory={activeCategory}
-          activeCountry={activeCountry}
+          activeCountry={mode === "tv" ? activeCountry : activeRadioCountry}
           onSelectCategory={(id) => { setActiveCategory(id === activeCategory ? null : id); setShowFavorites(false); }}
-          onSelectCountry={(code) => { setActiveCountry(code === activeCountry ? null : code); setShowFavorites(false); }}
+          onSelectCountry={(code) => {
+            if (mode === "tv") { setActiveCountry(code === activeCountry ? null : code); setShowFavorites(false); }
+            else setActiveRadioCountry(code === activeRadioCountry ? null : code);
+          }}
           favoritesCount={favoritesCount}
           showFavorites={showFavorites}
           onToggleFavorites={handleToggleFavorites}
+          radioTags={radioTags}
+          radioCountries={radioCountries}
+          activeTag={activeTag}
+          onSelectTag={(t) => setActiveTag(t === activeTag ? null : t)}
         />
         <main className="main-content">
-          <ChannelGrid
-            channels={displayedChannels}
-            loading={!showFavorites && loading}
-            error={!showFavorites ? error : null}
-            total={displayedTotal}
-            page={page}
-            totalPages={displayedTotalPages}
-            onPageChange={setPage}
-            onSelect={setSelectedChannel}
-            activeCategory={activeCategory}
-            activeCountry={activeCountry}
-            search={search}
-            showFavorites={showFavorites}
-            liveOnly={liveOnly}
-            onClearFilter={clearFilter}
-            onRetry={loadChannels}
-            isFavorite={isFavorite}
-            onToggleFavorite={toggleFavorite}
-          />
+          {mode === "tv" ? (
+            <ChannelGrid
+              channels={displayedChannels}
+              loading={!showFavorites && loading}
+              error={!showFavorites ? error : null}
+              total={displayedTotal}
+              page={page}
+              totalPages={displayedTotalPages}
+              onPageChange={setPage}
+              onSelect={setSelectedChannel}
+              activeCategory={activeCategory}
+              activeCountry={activeCountry}
+              search={search}
+              showFavorites={showFavorites}
+              liveOnly={liveOnly}
+              onClearFilter={clearFilter}
+              onRetry={loadChannels}
+              isFavorite={isFavorite}
+              onToggleFavorite={toggleFavorite}
+            />
+          ) : (
+            <RadioGrid
+              stations={radioStations}
+              loading={radioLoading}
+              error={radioError}
+              total={radioTotal}
+              page={radioPage}
+              totalPages={radioTotalPages}
+              onPageChange={setRadioPage}
+              onSelect={setSelectedStation}
+              activeTag={activeTag}
+              activeCountry={activeRadioCountry}
+              search={radioSearch}
+              workingOnly={workingOnly}
+              onClearFilter={clearFilter}
+              onRetry={loadRadio}
+            />
+          )}
         </main>
       </div>
       {selectedChannel && (
@@ -151,6 +241,12 @@ export default function App() {
           onClose={() => setSelectedChannel(null)}
           isFavorite={isFavorite(selectedChannel.id)}
           onToggleFavorite={() => toggleFavorite(selectedChannel)}
+        />
+      )}
+      {selectedStation && (
+        <RadioPlayer
+          station={selectedStation}
+          onClose={() => setSelectedStation(null)}
         />
       )}
     </>

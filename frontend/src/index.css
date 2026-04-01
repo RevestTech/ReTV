@@ -737,6 +737,134 @@ body {
   background: rgba(233, 69, 96, 0.1);
 }
 
+/* Mode Switcher */
+.mode-switcher {
+  display: flex;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.mode-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 14px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.mode-btn:hover {
+  color: var(--text-primary);
+}
+
+.mode-btn.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Radio Card */
+.radio-card .radio-placeholder {
+  color: var(--accent);
+}
+
+.radio-icon-wrap {
+  position: relative;
+}
+
+/* Radio Player Modal */
+.radio-modal {
+  max-width: 500px;
+}
+
+.radio-player-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.radio-player-visual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.radio-player-art {
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius);
+  object-fit: contain;
+  background: var(--bg-primary);
+  padding: 8px;
+}
+
+.radio-player-art-placeholder {
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius);
+  background: var(--bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+}
+
+.radio-eq {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 24px;
+}
+
+.radio-eq span {
+  display: block;
+  width: 4px;
+  background: var(--accent);
+  border-radius: 2px;
+  animation: eq-bounce 0.8s ease-in-out infinite alternate;
+}
+
+.radio-eq span:nth-child(1) { height: 8px; animation-delay: 0s; }
+.radio-eq span:nth-child(2) { height: 16px; animation-delay: 0.1s; }
+.radio-eq span:nth-child(3) { height: 24px; animation-delay: 0.2s; }
+.radio-eq span:nth-child(4) { height: 12px; animation-delay: 0.3s; }
+.radio-eq span:nth-child(5) { height: 20px; animation-delay: 0.15s; }
+
+@keyframes eq-bounce {
+  0% { transform: scaleY(0.3); }
+  100% { transform: scaleY(1); }
+}
+
+.radio-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+
+.radio-homepage-link {
+  font-size: 13px;
+  color: var(--accent);
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.radio-homepage-link:hover {
+  opacity: 0.8;
+}
+
 /* Country flag styling */
 .country-flag {
   margin-right: 6px;

@@ -6,8 +6,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import engine, Base, async_session
-from app.routers import channels, categories, healthcheck
+from app.routers import channels, categories, healthcheck, radio
 from app.services.iptv_service import full_sync
+from app.services.radio_service import sync_radio_stations
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -20,7 +21,12 @@ async def initial_sync():
         try:
             await full_sync(db)
         except Exception as e:
-            logger.error("Initial sync failed: %s", e)
+            logger.error("IPTV sync failed: %s", e)
+    async with async_session() as db:
+        try:
+            await sync_radio_stations(db)
+        except Exception as e:
+            logger.error("Radio sync failed: %s", e)
 
 
 @asynccontextmanager
@@ -53,6 +59,7 @@ app.add_middleware(
 app.include_router(channels.router)
 app.include_router(categories.router)
 app.include_router(healthcheck.router)
+app.include_router(radio.router)
 
 
 @app.get("/api/health")

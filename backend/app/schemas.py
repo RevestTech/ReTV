@@ -81,8 +81,58 @@ class PaginatedChannels(BaseModel):
     total_pages: int
 
 
+class RadioStationOut(BaseModel):
+    id: str
+    name: str
+    url: str = ""
+    url_resolved: str = ""
+    homepage: str = ""
+    favicon: str = ""
+    tags: str = ""
+    country: str = ""
+    country_code: str = ""
+    state: str = ""
+    language: str = ""
+    codec: str = ""
+    bitrate: int = 0
+    votes: int = 0
+    last_check_ok: bool = False
+
+    model_config = {"from_attributes": True}
+
+
+class RadioSearchParams(BaseModel):
+    query: Optional[str] = None
+    tag: Optional[str] = None
+    country: Optional[str] = None
+    language: Optional[str] = None
+    working_only: bool = False
+    page: int = 1
+    per_page: int = 40
+
+
+class PaginatedRadio(BaseModel):
+    stations: list[RadioStationOut]
+    total: int
+    page: int
+    per_page: int
+    total_pages: int
+
+
+class RadioTagOut(BaseModel):
+    name: str
+    station_count: int = 0
+
+
+class RadioCountryOut(BaseModel):
+    country: str
+    country_code: str
+    station_count: int = 0
+
+
 class StatsOut(BaseModel):
     total_channels: int
     total_categories: int
     total_countries: int
     total_streams: int
+    total_radio_stations: int = 0

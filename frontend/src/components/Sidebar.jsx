@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 export default function Sidebar({
+  mode,
   categories,
   countries,
   activeCategory,
@@ -10,8 +11,72 @@ export default function Sidebar({
   favoritesCount,
   showFavorites,
   onToggleFavorites,
+  radioTags,
+  radioCountries,
+  activeTag,
+  onSelectTag,
 }) {
   const [tab, setTab] = useState("categories");
+  const [radioTab, setRadioTab] = useState("genres");
+
+  if (mode === "radio") {
+    return (
+      <aside className="sidebar">
+        <div style={{ display: "flex", gap: "4px", padding: "0 12px", marginBottom: "16px" }}>
+          <TabButton active={radioTab === "genres"} onClick={() => setRadioTab("genres")}>
+            Genres
+          </TabButton>
+          <TabButton active={radioTab === "countries"} onClick={() => setRadioTab("countries")}>
+            Countries
+          </TabButton>
+        </div>
+
+        {radioTab === "genres" && (
+          <div className="sidebar-section">
+            <div className="sidebar-title">Genres</div>
+            <div
+              className={`sidebar-item ${!activeTag ? "active" : ""}`}
+              onClick={() => onSelectTag(null)}
+            >
+              <span>All Genres</span>
+            </div>
+            {radioTags.map((t) => (
+              <div
+                key={t.name}
+                className={`sidebar-item ${activeTag === t.name ? "active" : ""}`}
+                onClick={() => onSelectTag(t.name)}
+              >
+                <span>{t.name}</span>
+                <span className="sidebar-count">{t.station_count.toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {radioTab === "countries" && (
+          <div className="sidebar-section">
+            <div className="sidebar-title">Countries</div>
+            <div
+              className={`sidebar-item ${!activeCountry ? "active" : ""}`}
+              onClick={() => onSelectCountry(null)}
+            >
+              <span>All Countries</span>
+            </div>
+            {radioCountries.slice(0, 80).map((c) => (
+              <div
+                key={c.country_code}
+                className={`sidebar-item ${activeCountry === c.country_code ? "active" : ""}`}
+                onClick={() => onSelectCountry(c.country_code)}
+              >
+                <span>{c.country}</span>
+                <span className="sidebar-count">{c.station_count.toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </aside>
+    );
+  }
 
   return (
     <aside className="sidebar">

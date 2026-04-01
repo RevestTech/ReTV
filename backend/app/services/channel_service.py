@@ -1,7 +1,7 @@
 from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Channel, Category, Country, Stream
+from app.models import Channel, Category, Country, Stream, RadioStation
 from app.schemas import ChannelSearchParams
 
 
@@ -84,9 +84,11 @@ async def get_stats(db: AsyncSession):
     categories = (await db.execute(select(func.count(Category.id)))).scalar() or 0
     countries = (await db.execute(select(func.count(Country.code)))).scalar() or 0
     streams = (await db.execute(select(func.count(Stream.id)))).scalar() or 0
+    radio = (await db.execute(select(func.count(RadioStation.id)))).scalar() or 0
     return {
         "total_channels": channels,
         "total_categories": categories,
         "total_countries": countries,
         "total_streams": streams,
+        "total_radio_stations": radio,
     }
