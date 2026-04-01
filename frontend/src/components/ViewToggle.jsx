@@ -2,6 +2,17 @@ export default function ViewToggle({ viewMode, onViewToggle }) {
   return (
     <div className="view-toggle">
       <button
+        className={`view-toggle-btn ${viewMode === "thumb" ? "active" : ""}`}
+        onClick={() => onViewToggle("thumb")}
+        title="Thumbnail view"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="3" width="20" height="10" rx="2" />
+          <rect x="2" y="16" width="9" height="5" rx="1" />
+          <rect x="13" y="16" width="9" height="5" rx="1" />
+        </svg>
+      </button>
+      <button
         className={`view-toggle-btn ${viewMode === "grid" ? "active" : ""}`}
         onClick={() => onViewToggle("grid")}
         title="Grid view"

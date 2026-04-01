@@ -99,14 +99,12 @@ export default function RadioGrid({
         </div>
       ) : (
         <>
-          <div className={viewMode === "list" ? "channel-list" : "channel-grid"}>
-            {stations.map((st) =>
-              viewMode === "list" ? (
-                <RadioRow key={st.id} station={st} onClick={() => onSelect(st)} />
-              ) : (
-                <RadioCard key={st.id} station={st} onClick={() => onSelect(st)} />
-              )
-            )}
+          <div className={viewMode === "list" ? "channel-list" : viewMode === "thumb" ? "thumb-grid" : "channel-grid"}>
+            {stations.map((st) => {
+              if (viewMode === "list") return <RadioRow key={st.id} station={st} onClick={() => onSelect(st)} />;
+              if (viewMode === "thumb") return <RadioThumb key={st.id} station={st} onClick={() => onSelect(st)} />;
+              return <RadioCard key={st.id} station={st} onClick={() => onSelect(st)} />;
+            })}
           </div>
 
           {totalPages > 1 && (
@@ -224,6 +222,54 @@ function RadioRow({ station, onClick }) {
           <span className={`status-dot ${station.last_check_ok ? "online" : "offline"}`} />
           {station.last_check_ok ? "ON AIR" : "DOWN"}
         </span>
+      </div>
+    </div>
+  );
+}
+
+function RadioThumb({ station, onClick }) {
+  const tags = station.tags ? station.tags.split(",").map((t) => t.trim()).filter(Boolean) : [];
+
+  return (
+    <div className="thumb-card" onClick={onClick}>
+      <div className="thumb-image">
+        {station.favicon ? (
+          <img
+            src={station.favicon}
+            alt={station.name}
+            loading="lazy"
+            onError={(e) => {
+              e.target.style.display = "none";
+              e.target.nextSibling.style.display = "flex";
+            }}
+          />
+        ) : null}
+        <div
+          className="thumb-placeholder radio-placeholder"
+          style={station.favicon ? { display: "none" } : {}}
+        >
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="2" />
+            <path d="M16.24 7.76a6 6 0 0 1 0 8.49" />
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+            <path d="M7.76 16.24a6 6 0 0 1 0-8.49" />
+            <path d="M4.93 19.07a10 10 0 0 1 0-14.14" />
+          </svg>
+        </div>
+        <span className={`thumb-status ${station.last_check_ok ? "" : "down"}`}>
+          <span className={`status-dot ${station.last_check_ok ? "online" : "offline"}`} />
+          {station.last_check_ok ? "ON AIR" : "DOWN"}
+        </span>
+      </div>
+      <div className="thumb-info">
+        <span className="thumb-name" title={station.name}>{station.name}</span>
+        <div className="thumb-tags">
+          {station.country_code && <span className="channel-tag">{station.country_code}</span>}
+          {tags.slice(0, 2).map((t) => (
+            <span key={t} className="channel-tag">{t}</span>
+          ))}
+          {station.bitrate > 0 && <span className="channel-tag">{station.bitrate}k</span>}
+        </div>
       </div>
     </div>
   );

@@ -113,26 +113,19 @@ export default function ChannelGrid({
         </div>
       ) : (
         <>
-          <div className={viewMode === "list" ? "channel-list" : "channel-grid"}>
-            {channels.map((ch) =>
-              viewMode === "list" ? (
-                <ChannelRow
-                  key={ch.id}
-                  channel={ch}
-                  onClick={() => onSelect(ch)}
-                  favorited={isFavorite(ch.id)}
-                  onToggleFavorite={(e) => { e.stopPropagation(); onToggleFavorite(ch); }}
-                />
-              ) : (
-                <ChannelCard
-                  key={ch.id}
-                  channel={ch}
-                  onClick={() => onSelect(ch)}
-                  favorited={isFavorite(ch.id)}
-                  onToggleFavorite={(e) => { e.stopPropagation(); onToggleFavorite(ch); }}
-                />
-              )
-            )}
+          <div className={viewMode === "list" ? "channel-list" : viewMode === "thumb" ? "thumb-grid" : "channel-grid"}>
+            {channels.map((ch) => {
+              const props = {
+                key: ch.id,
+                channel: ch,
+                onClick: () => onSelect(ch),
+                favorited: isFavorite(ch.id),
+                onToggleFavorite: (e) => { e.stopPropagation(); onToggleFavorite(ch); },
+              };
+              if (viewMode === "list") return <ChannelRow {...props} />;
+              if (viewMode === "thumb") return <ChannelThumb {...props} />;
+              return <ChannelCard {...props} />;
+            })}
           </div>
 
           {!showFavorites && totalPages > 1 && (
@@ -257,6 +250,57 @@ function ChannelRow({ channel, onClick, favorited, onToggleFavorite }) {
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
         </svg>
       </button>
+    </div>
+  );
+}
+
+function ChannelThumb({ channel, onClick, favorited, onToggleFavorite }) {
+  const cats = channel.categories ? channel.categories.split(";").filter(Boolean) : [];
+
+  return (
+    <div className="thumb-card" onClick={onClick}>
+      <div className="thumb-image">
+        {channel.logo ? (
+          <img
+            src={channel.logo}
+            alt={channel.name}
+            loading="lazy"
+            onError={(e) => {
+              e.target.style.display = "none";
+              e.target.nextSibling.style.display = "flex";
+            }}
+          />
+        ) : null}
+        <div
+          className="thumb-placeholder"
+          style={channel.logo ? { display: "none" } : {}}
+        >
+          {channel.name.charAt(0).toUpperCase()}
+        </div>
+        {channel.stream_url && (
+          <span className={`thumb-status ${channel.health_status === "offline" || channel.health_status === "error" ? "down" : ""}`}>
+            <span className={`status-dot ${channel.health_status || "unknown"}`} />
+            {channel.health_status === "online" ? "LIVE" : channel.health_status === "offline" || channel.health_status === "error" ? "DOWN" : "LIVE"}
+          </span>
+        )}
+        <button
+          className={`favorite-btn thumb-fav ${favorited ? "favorited" : ""}`}
+          onClick={onToggleFavorite}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+        </button>
+      </div>
+      <div className="thumb-info">
+        <span className="thumb-name" title={channel.name}>{channel.name}</span>
+        <div className="thumb-tags">
+          {channel.country_code && <span className="channel-tag">{channel.country_code}</span>}
+          {cats.slice(0, 2).map((c) => (
+            <span key={c} className="channel-tag">{c}</span>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
