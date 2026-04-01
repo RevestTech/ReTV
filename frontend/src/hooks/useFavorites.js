@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 
-const STORAGE_KEY = "retv_favorites";
+const STORAGE_KEY = "adajoon_favorites";
 
 function loadFavorites() {
   try {

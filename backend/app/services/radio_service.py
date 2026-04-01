@@ -14,7 +14,7 @@ RADIO_API = "https://de1.api.radio-browser.info"
 
 
 async def fetch_radio_json(path: str, params: dict | None = None) -> list[dict]:
-    async with httpx.AsyncClient(timeout=60, headers={"User-Agent": "ReTV/1.0"}) as client:
+    async with httpx.AsyncClient(timeout=60, headers={"User-Agent": "Adajoon/1.0"}) as client:
         resp = await client.get(f"{RADIO_API}{path}", params=params)
         resp.raise_for_status()
         return resp.json()

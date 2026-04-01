@@ -23,7 +23,7 @@ export default function Header({
   return (
     <header className="header">
       <div className="logo">
-        Re<span>TV</span>
+        Ada<span>joon</span>
       </div>
 
       <div className="mode-switcher">

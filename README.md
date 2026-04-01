@@ -1,4 +1,4 @@
-# ReTV - Online TV Channel Browser
+# Adajoon - TV & Radio from Around the World
 
 A containerized application that connects to online TV station databases, discovers channels, categorizes them, and provides powerful search functionality.
 
