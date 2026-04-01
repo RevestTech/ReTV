@@ -33,7 +33,7 @@ export default function Sidebar({
               <span className={`live-dot ${liveOnly ? "on" : ""}`} />
               Working Stations Only
             </span>
-            <span className="sidebar-count" style={{ fontSize: "10px", opacity: 0.7 }}>
+            <span className={`live-filter-status ${liveOnly ? "on" : ""}`}>
               {liveOnly ? "ON" : "OFF"}
             </span>
           </div>
@@ -120,7 +120,7 @@ export default function Sidebar({
             <span className={`live-dot ${liveOnly ? "on" : ""}`} />
             Live Channels Only
           </span>
-          <span className="sidebar-count" style={{ fontSize: "10px", opacity: 0.7 }}>
+          <span className={`live-filter-status ${liveOnly ? "on" : ""}`}>
             {liveOnly ? "ON" : "OFF"}
           </span>
         </div>

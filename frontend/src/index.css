@@ -94,7 +94,8 @@ body {
   background: var(--bg-primary);
   padding: 2px 8px;
   border-radius: 10px;
-  color: var(--text-muted);
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 
 /* Header */
@@ -297,9 +298,10 @@ body {
 .channel-tag {
   font-size: 11px;
   padding: 2px 8px;
-  background: var(--bg-primary);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 10px;
-  color: var(--text-muted);
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 
 .channel-stream-badge {
@@ -708,6 +710,21 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.live-filter-status {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  color: var(--text-secondary);
+  background: var(--bg-primary);
+  letter-spacing: 0.5px;
+}
+
+.live-filter-status.on {
+  color: #00e676;
+  background: rgba(0, 230, 118, 0.15);
 }
 
 .live-dot {
