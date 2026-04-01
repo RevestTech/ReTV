@@ -24,6 +24,7 @@ export default function App() {
   });
 
   const auth = useAuth();
+  const isGuest = !auth.user;
 
   const handleViewToggle = (v) => {
     setViewMode(v);
@@ -271,6 +272,8 @@ export default function App() {
             if (mode === "tv") setLiveOnly((v) => !v);
             else setWorkingOnly((v) => !v);
           }}
+          isGuest={isGuest}
+          onLogin={() => setShowLogin(true)}
         />
         <main className="main-content">
           {showFavorites ? (
@@ -306,6 +309,8 @@ export default function App() {
               onToggleFavorite={toggleFavorite}
               viewMode={viewMode}
               onViewToggle={handleViewToggle}
+              isGuest={isGuest}
+              onLogin={() => setShowLogin(true)}
             />
           ) : (
             <RadioGrid
@@ -328,6 +333,8 @@ export default function App() {
               onToggleFavorite={toggleRadioFavorite}
               viewMode={viewMode}
               onViewToggle={handleViewToggle}
+              isGuest={isGuest}
+              onLogin={() => setShowLogin(true)}
             />
           )}
         </main>
@@ -338,6 +345,8 @@ export default function App() {
           onClose={() => setSelectedChannel(null)}
           isFavorite={isFavorite(selectedChannel.id)}
           onToggleFavorite={() => toggleFavorite(selectedChannel)}
+          isGuest={isGuest}
+          onLogin={() => setShowLogin(true)}
         />
       )}
       {selectedStation && (
@@ -346,6 +355,8 @@ export default function App() {
           onClose={() => setSelectedStation(null)}
           isFavorite={isRadioFavorite(selectedStation.id)}
           onToggleFavorite={() => toggleRadioFavorite(selectedStation)}
+          isGuest={isGuest}
+          onLogin={() => setShowLogin(true)}
         />
       )}
       {showLogin && !auth.user && (

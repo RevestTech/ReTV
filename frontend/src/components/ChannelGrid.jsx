@@ -1,5 +1,7 @@
 import ViewToggle from "./ViewToggle";
 
+const GUEST_LIMIT = 20;
+
 export default function ChannelGrid({
   channels,
   loading,
@@ -20,6 +22,8 @@ export default function ChannelGrid({
   onToggleFavorite,
   viewMode,
   onViewToggle,
+  isGuest,
+  onLogin,
 }) {
   const hasFilters = activeCategory || activeCountry || search || showFavorites || liveOnly;
 
@@ -114,13 +118,14 @@ export default function ChannelGrid({
       ) : (
         <>
           <div className={viewMode === "list" ? "channel-list" : viewMode === "thumb" ? "thumb-grid" : "channel-grid"}>
-            {channels.map((ch) => {
+            {(isGuest ? channels.slice(0, GUEST_LIMIT) : channels).map((ch) => {
               const props = {
                 key: ch.id,
                 channel: ch,
                 onClick: () => onSelect(ch),
-                favorited: isFavorite(ch.id),
-                onToggleFavorite: (e) => { e.stopPropagation(); onToggleFavorite(ch); },
+                favorited: !isGuest && isFavorite(ch.id),
+                onToggleFavorite: isGuest ? (e) => { e.stopPropagation(); onLogin(); } : (e) => { e.stopPropagation(); onToggleFavorite(ch); },
+                isGuest,
               };
               if (viewMode === "list") return <ChannelRow {...props} />;
               if (viewMode === "thumb") return <ChannelThumb {...props} />;
@@ -128,7 +133,11 @@ export default function ChannelGrid({
             })}
           </div>
 
-          {!showFavorites && totalPages > 1 && (
+          {isGuest && channels.length > GUEST_LIMIT && (
+            <GuestBanner onLogin={onLogin} total={total} type="channels" />
+          )}
+
+          {!isGuest && !showFavorites && totalPages > 1 && (
             <div className="pagination">
               <button disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
                 ← Prev
@@ -147,20 +156,41 @@ export default function ChannelGrid({
   );
 }
 
-function ChannelCard({ channel, onClick, favorited, onToggleFavorite }) {
+function GuestBanner({ onLogin, total, type }) {
+  return (
+    <div className="guest-banner">
+      <div className="guest-banner-content">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+          <polyline points="10 17 15 12 10 7" />
+          <line x1="15" y1="12" x2="3" y2="12" />
+        </svg>
+        <div>
+          <strong>Sign in to unlock all {total.toLocaleString()} {type}</strong>
+          <span>Plus save favorites and sync across devices</span>
+        </div>
+        <button onClick={onLogin}>Sign In</button>
+      </div>
+    </div>
+  );
+}
+
+function ChannelCard({ channel, onClick, favorited, onToggleFavorite, isGuest }) {
   const cats = channel.categories ? channel.categories.split(";").filter(Boolean) : [];
 
   return (
     <div className="channel-card" onClick={onClick}>
-      <button
-        className={`favorite-btn ${favorited ? "favorited" : ""}`}
-        onClick={onToggleFavorite}
-        title={favorited ? "Remove from favorites" : "Add to favorites"}
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-        </svg>
-      </button>
+      {!isGuest && (
+        <button
+          className={`favorite-btn ${favorited ? "favorited" : ""}`}
+          onClick={onToggleFavorite}
+          title={favorited ? "Remove from favorites" : "Add to favorites"}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+        </button>
+      )}
       {channel.logo ? (
         <img
           className="channel-logo"
@@ -200,7 +230,7 @@ function ChannelCard({ channel, onClick, favorited, onToggleFavorite }) {
   );
 }
 
-function ChannelRow({ channel, onClick, favorited, onToggleFavorite }) {
+function ChannelRow({ channel, onClick, favorited, onToggleFavorite, isGuest }) {
   const cats = channel.categories ? channel.categories.split(";").filter(Boolean) : [];
 
   return (
@@ -241,20 +271,22 @@ function ChannelRow({ channel, onClick, favorited, onToggleFavorite }) {
           </span>
         )}
       </div>
-      <button
-        className={`favorite-btn list-fav-btn ${favorited ? "favorited" : ""}`}
-        onClick={onToggleFavorite}
-        title={favorited ? "Remove from favorites" : "Add to favorites"}
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-        </svg>
-      </button>
+      {!isGuest && (
+        <button
+          className={`favorite-btn list-fav-btn ${favorited ? "favorited" : ""}`}
+          onClick={onToggleFavorite}
+          title={favorited ? "Remove from favorites" : "Add to favorites"}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }
 
-function ChannelThumb({ channel, onClick, favorited, onToggleFavorite }) {
+function ChannelThumb({ channel, onClick, favorited, onToggleFavorite, isGuest }) {
   const cats = channel.categories ? channel.categories.split(";").filter(Boolean) : [];
 
   return (
@@ -283,14 +315,16 @@ function ChannelThumb({ channel, onClick, favorited, onToggleFavorite }) {
             {channel.health_status === "online" ? "LIVE" : channel.health_status === "offline" || channel.health_status === "error" ? "DOWN" : "LIVE"}
           </span>
         )}
-        <button
-          className={`favorite-btn thumb-fav ${favorited ? "favorited" : ""}`}
-          onClick={onToggleFavorite}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-          </svg>
-        </button>
+        {!isGuest && (
+          <button
+            className={`favorite-btn thumb-fav ${favorited ? "favorited" : ""}`}
+            onClick={onToggleFavorite}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+          </button>
+        )}
       </div>
       <div className="thumb-info">
         <span className="thumb-name" title={channel.name}>{channel.name}</span>

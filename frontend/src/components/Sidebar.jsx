@@ -20,6 +20,8 @@ export default function Sidebar({
   radioCountries,
   activeTag,
   onSelectTag,
+  isGuest,
+  onLogin,
 }) {
   const [tab, setTab] = useState("categories");
   const [radioTab, setRadioTab] = useState("genres");
@@ -86,20 +88,22 @@ export default function Sidebar({
     return (
       <aside className={`sidebar ${className || ""}`}>
         <div className="sidebar-section">
-          <div
-            className={`sidebar-item favorites-item ${showFavorites ? "active" : ""}`}
-            onClick={onToggleFavorites}
-          >
-            <span className="favorites-label">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill={showFavorites ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-              </svg>
-              Favorites
-            </span>
-            {favoritesCount > 0 && (
-              <span className="sidebar-count favorites-count">{favoritesCount}</span>
-            )}
-          </div>
+          {!isGuest && (
+            <div
+              className={`sidebar-item favorites-item ${showFavorites ? "active" : ""}`}
+              onClick={onToggleFavorites}
+            >
+              <span className="favorites-label">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill={showFavorites ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
+                Favorites
+              </span>
+              {favoritesCount > 0 && (
+                <span className="sidebar-count favorites-count">{favoritesCount}</span>
+              )}
+            </div>
+          )}
           <div
             className={`sidebar-item live-filter-item ${liveOnly ? "active" : ""}`}
             onClick={onToggleLiveOnly}
@@ -164,20 +168,22 @@ export default function Sidebar({
   return (
     <aside className={`sidebar ${className || ""}`}>
       <div className="sidebar-section">
-        <div
-          className={`sidebar-item favorites-item ${showFavorites ? "active" : ""}`}
-          onClick={onToggleFavorites}
-        >
-          <span className="favorites-label">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill={showFavorites ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-            </svg>
-            Favorites
-          </span>
-          {favoritesCount > 0 && (
-            <span className="sidebar-count favorites-count">{favoritesCount}</span>
-          )}
-        </div>
+        {!isGuest && (
+          <div
+            className={`sidebar-item favorites-item ${showFavorites ? "active" : ""}`}
+            onClick={onToggleFavorites}
+          >
+            <span className="favorites-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill={showFavorites ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              </svg>
+              Favorites
+            </span>
+            {favoritesCount > 0 && (
+              <span className="sidebar-count favorites-count">{favoritesCount}</span>
+            )}
+          </div>
+        )}
         <div
           className={`sidebar-item live-filter-item ${liveOnly ? "active" : ""}`}
           onClick={onToggleLiveOnly}

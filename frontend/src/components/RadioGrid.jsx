@@ -1,5 +1,7 @@
 import ViewToggle from "./ViewToggle";
 
+const GUEST_LIMIT = 20;
+
 export default function RadioGrid({
   stations,
   loading,
@@ -20,6 +22,8 @@ export default function RadioGrid({
   onToggleFavorite,
   viewMode,
   onViewToggle,
+  isGuest,
+  onLogin,
 }) {
   const hasFilters = activeTag || activeCountry || search || showFavorites || workingOnly;
 
@@ -116,13 +120,14 @@ export default function RadioGrid({
       ) : (
         <>
           <div className={viewMode === "list" ? "channel-list" : viewMode === "thumb" ? "thumb-grid" : "channel-grid"}>
-            {stations.map((st) => {
+            {(isGuest ? stations.slice(0, GUEST_LIMIT) : stations).map((st) => {
               const props = {
                 key: st.id,
                 station: st,
                 onClick: () => onSelect(st),
-                favorited: isFavorite(st.id),
-                onToggleFavorite: (e) => { e.stopPropagation(); onToggleFavorite(st); },
+                favorited: !isGuest && isFavorite(st.id),
+                onToggleFavorite: isGuest ? (e) => { e.stopPropagation(); onLogin(); } : (e) => { e.stopPropagation(); onToggleFavorite(st); },
+                isGuest,
               };
               if (viewMode === "list") return <RadioRow {...props} />;
               if (viewMode === "thumb") return <RadioThumb {...props} />;
@@ -130,7 +135,11 @@ export default function RadioGrid({
             })}
           </div>
 
-          {!showFavorites && totalPages > 1 && (
+          {isGuest && stations.length > GUEST_LIMIT && (
+            <GuestBanner onLogin={onLogin} total={total} type="stations" />
+          )}
+
+          {!isGuest && !showFavorites && totalPages > 1 && (
             <div className="pagination">
               <button disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
                 ← Prev
@@ -149,20 +158,41 @@ export default function RadioGrid({
   );
 }
 
-function RadioCard({ station, onClick, favorited, onToggleFavorite }) {
+function GuestBanner({ onLogin, total, type }) {
+  return (
+    <div className="guest-banner">
+      <div className="guest-banner-content">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+          <polyline points="10 17 15 12 10 7" />
+          <line x1="15" y1="12" x2="3" y2="12" />
+        </svg>
+        <div>
+          <strong>Sign in to unlock all {total.toLocaleString()} {type}</strong>
+          <span>Plus save favorites and sync across devices</span>
+        </div>
+        <button onClick={onLogin}>Sign In</button>
+      </div>
+    </div>
+  );
+}
+
+function RadioCard({ station, onClick, favorited, onToggleFavorite, isGuest }) {
   const tags = station.tags ? station.tags.split(",").map((t) => t.trim()).filter(Boolean) : [];
 
   return (
     <div className="channel-card radio-card" onClick={onClick}>
-      <button
-        className={`favorite-btn ${favorited ? "favorited" : ""}`}
-        onClick={onToggleFavorite}
-        title={favorited ? "Remove from favorites" : "Add to favorites"}
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-        </svg>
-      </button>
+      {!isGuest && (
+        <button
+          className={`favorite-btn ${favorited ? "favorited" : ""}`}
+          onClick={onToggleFavorite}
+          title={favorited ? "Remove from favorites" : "Add to favorites"}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+        </button>
+      )}
       <div className="radio-icon-wrap">
         {station.favicon ? (
           <img
@@ -211,7 +241,7 @@ function RadioCard({ station, onClick, favorited, onToggleFavorite }) {
   );
 }
 
-function RadioRow({ station, onClick, favorited, onToggleFavorite }) {
+function RadioRow({ station, onClick, favorited, onToggleFavorite, isGuest }) {
   const tags = station.tags ? station.tags.split(",").map((t) => t.trim()).filter(Boolean) : [];
 
   return (
@@ -255,20 +285,22 @@ function RadioRow({ station, onClick, favorited, onToggleFavorite }) {
           {station.last_check_ok ? "ON AIR" : "DOWN"}
         </span>
       </div>
-      <button
-        className={`favorite-btn list-fav-btn ${favorited ? "favorited" : ""}`}
-        onClick={onToggleFavorite}
-        title={favorited ? "Remove from favorites" : "Add to favorites"}
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-        </svg>
-      </button>
+      {!isGuest && (
+        <button
+          className={`favorite-btn list-fav-btn ${favorited ? "favorited" : ""}`}
+          onClick={onToggleFavorite}
+          title={favorited ? "Remove from favorites" : "Add to favorites"}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }
 
-function RadioThumb({ station, onClick, favorited, onToggleFavorite }) {
+function RadioThumb({ station, onClick, favorited, onToggleFavorite, isGuest }) {
   const tags = station.tags ? station.tags.split(",").map((t) => t.trim()).filter(Boolean) : [];
 
   return (
@@ -301,14 +333,16 @@ function RadioThumb({ station, onClick, favorited, onToggleFavorite }) {
           <span className={`status-dot ${station.last_check_ok ? "online" : "offline"}`} />
           {station.last_check_ok ? "ON AIR" : "DOWN"}
         </span>
-        <button
-          className={`favorite-btn thumb-fav ${favorited ? "favorited" : ""}`}
-          onClick={onToggleFavorite}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-          </svg>
-        </button>
+        {!isGuest && (
+          <button
+            className={`favorite-btn thumb-fav ${favorited ? "favorited" : ""}`}
+            onClick={onToggleFavorite}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+          </button>
+        )}
       </div>
       <div className="thumb-info">
         <span className="thumb-name" title={station.name}>{station.name}</span>
