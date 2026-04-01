@@ -89,6 +89,107 @@ body {
   border-right: 3px solid var(--accent);
 }
 
+.sidebar-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 12px;
+  margin-bottom: 12px;
+}
+
+.sidebar-tab-btn {
+  flex: 1;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.sidebar-tab-btn.active {
+  background: rgba(233, 69, 96, 0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Chip Cloud */
+.chip-cloud-section {
+  padding: 0 12px;
+}
+
+.chip-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  padding: 6px 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.chip:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.chip.active .chip-count {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.chip-count {
+  font-size: 10px;
+  background: var(--bg-secondary);
+  padding: 1px 6px;
+  border-radius: 10px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.chip-expand {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+  padding: 6px 0;
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.chip-expand:hover {
+  opacity: 0.8;
+}
+
 .sidebar-search {
   display: flex;
   align-items: center;
