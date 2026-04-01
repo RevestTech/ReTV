@@ -6,6 +6,7 @@ import RadioGrid from "./components/RadioGrid";
 import VideoPlayer from "./components/VideoPlayer";
 import RadioPlayer from "./components/RadioPlayer";
 import LoginModal from "./components/LoginModal";
+import LandingPage from "./components/LandingPage";
 import FavoritesView from "./components/FavoritesView";
 import useFavorites, { useRadioFavorites } from "./hooks/useFavorites";
 import { useAuth } from "./hooks/useAuth";
@@ -18,7 +19,9 @@ export default function App() {
   const [mode, setMode] = useState("tv");
   const [viewMode, setViewMode] = useState(() => localStorage.getItem("adajoon_view") || "grid");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
+  const [showLogin, setShowLogin] = useState(() => {
+    try { return !localStorage.getItem("adajoon_user"); } catch { return true; }
+  });
 
   const auth = useAuth();
 
@@ -345,11 +348,11 @@ export default function App() {
           onToggleFavorite={() => toggleRadioFavorite(selectedStation)}
         />
       )}
-      {showLogin && (
-        <LoginModal
-          onClose={() => setShowLogin(false)}
+      {showLogin && !auth.user && (
+        <LandingPage
           onGoogleLogin={handleGoogleLogin}
           googleClientId={GOOGLE_CLIENT_ID}
+          onSkip={() => setShowLogin(false)}
         />
       )}
     </>
