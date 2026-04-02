@@ -289,13 +289,14 @@ function SidebarList({
       <div className="sidebar-filter-list" role="listbox" aria-multiselectable="true">
         {!filterText && (
           <div
-            className={`sidebar-item ${!hasSelection ? "active" : ""}`}
+            className={`sidebar-item sidebar-item--all ${!hasSelection ? "active" : ""}`}
             onClick={() => onSelect(null)}
             onKeyDown={(e) => handleKey(e, () => onSelect(null))}
             tabIndex={0}
             role="option"
             aria-selected={!hasSelection}
           >
+            <span className="sidebar-check" aria-hidden />
             <span className="sidebar-item-label">{allLabel}</span>
           </div>
         )}
@@ -320,14 +321,12 @@ function SidebarList({
                   title={`Total ${getCount(item).toLocaleString()} · Live ${getLiveCount(item).toLocaleString()} · Verified ${getVerifiedCount(item).toLocaleString()}`}
                 >
                   <span className="sidebar-count sidebar-count--total">{getCount(item).toLocaleString()}</span>
-                  <div className="sidebar-count-chips">
-                    <span className="sidebar-chip sidebar-chip--live" title="Live (playable stream)">
-                      L {getLiveCount(item).toLocaleString()}
-                    </span>
-                    <span className="sidebar-chip sidebar-chip--ver" title="Verified">
-                      ✓ {getVerifiedCount(item).toLocaleString()}
-                    </span>
-                  </div>
+                  <span className="sidebar-chip sidebar-chip--live" title="Live (playable stream)">
+                    L {getLiveCount(item).toLocaleString()}
+                  </span>
+                  <span className="sidebar-chip sidebar-chip--ver" title="Verified">
+                    ✓ {getVerifiedCount(item).toLocaleString()}
+                  </span>
                 </div>
               ) : (
                 <span className="sidebar-count">{getCount(item).toLocaleString()}</span>
