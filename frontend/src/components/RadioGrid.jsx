@@ -2,6 +2,40 @@ import ViewToggle from "./ViewToggle";
 
 const GUEST_LIMIT = 20;
 
+function getRadioStreamStatus(station) {
+  const hs = station.health_status;
+  if (hs === "verified") {
+    return {
+      badgeClass: "channel-stream-badge badge-verified status-verified",
+      dotClass: "verified",
+      label: "VERIFIED",
+      thumbClass: "",
+    };
+  }
+  if (hs === "offline") {
+    return {
+      badgeClass: "channel-stream-badge status-offline",
+      dotClass: "offline",
+      label: "OFFLINE",
+      thumbClass: "down",
+    };
+  }
+  if (station.last_check_ok === true) {
+    return {
+      badgeClass: "channel-stream-badge badge-verified status-verified",
+      dotClass: "verified",
+      label: "LIVE",
+      thumbClass: "",
+    };
+  }
+  return {
+    badgeClass: "channel-stream-badge status-neutral",
+    dotClass: "unknown",
+    label: "UNCHECKED",
+    thumbClass: "neutral",
+  };
+}
+
 export default function RadioGrid({
   stations,
   loading,
@@ -179,6 +213,7 @@ function GuestBanner({ onLogin, total, type }) {
 
 function RadioCard({ station, onClick, favorited, onToggleFavorite, isGuest }) {
   const tags = station.tags ? station.tags.split(",").map((t) => t.trim()).filter(Boolean) : [];
+  const streamStatus = getRadioStreamStatus(station);
 
   return (
     <div className="channel-card radio-card" onClick={onClick}>
@@ -232,9 +267,9 @@ function RadioCard({ station, onClick, favorited, onToggleFavorite, isGuest }) {
         {station.bitrate > 0 && (
           <span className="channel-tag">{station.bitrate}k</span>
         )}
-        <span className={`channel-stream-badge ${station.last_check_ok ? "status-online" : "status-offline"}`}>
-          <span className={`status-dot ${station.last_check_ok ? "online" : "offline"}`} />
-          {station.last_check_ok ? "ON AIR" : "DOWN"}
+        <span className={streamStatus.badgeClass}>
+          <span className={`status-dot ${streamStatus.dotClass}`} />
+          {streamStatus.label}
         </span>
       </div>
     </div>
@@ -243,6 +278,7 @@ function RadioCard({ station, onClick, favorited, onToggleFavorite, isGuest }) {
 
 function RadioRow({ station, onClick, favorited, onToggleFavorite, isGuest }) {
   const tags = station.tags ? station.tags.split(",").map((t) => t.trim()).filter(Boolean) : [];
+  const streamStatus = getRadioStreamStatus(station);
 
   return (
     <div className="list-row" onClick={onClick}>
@@ -280,9 +316,9 @@ function RadioRow({ station, onClick, favorited, onToggleFavorite, isGuest }) {
         </div>
       </div>
       <div className="list-row-actions">
-        <span className={`channel-stream-badge ${station.last_check_ok ? "status-online" : "status-offline"}`}>
-          <span className={`status-dot ${station.last_check_ok ? "online" : "offline"}`} />
-          {station.last_check_ok ? "ON AIR" : "DOWN"}
+        <span className={streamStatus.badgeClass}>
+          <span className={`status-dot ${streamStatus.dotClass}`} />
+          {streamStatus.label}
         </span>
         {!isGuest && (
           <button
@@ -302,6 +338,7 @@ function RadioRow({ station, onClick, favorited, onToggleFavorite, isGuest }) {
 
 function RadioThumb({ station, onClick, favorited, onToggleFavorite, isGuest }) {
   const tags = station.tags ? station.tags.split(",").map((t) => t.trim()).filter(Boolean) : [];
+  const streamStatus = getRadioStreamStatus(station);
 
   return (
     <div className="thumb-card" onClick={onClick}>
@@ -329,9 +366,9 @@ function RadioThumb({ station, onClick, favorited, onToggleFavorite, isGuest }) 
             <path d="M4.93 19.07a10 10 0 0 1 0-14.14" />
           </svg>
         </div>
-        <span className={`thumb-status ${station.last_check_ok ? "" : "down"}`}>
-          <span className={`status-dot ${station.last_check_ok ? "online" : "offline"}`} />
-          {station.last_check_ok ? "ON AIR" : "DOWN"}
+        <span className={`thumb-status ${streamStatus.thumbClass}`.trim()}>
+          <span className={`status-dot ${streamStatus.dotClass}`} />
+          {streamStatus.label}
         </span>
         {!isGuest && (
           <button

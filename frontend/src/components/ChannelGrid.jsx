@@ -2,6 +2,65 @@ import ViewToggle from "./ViewToggle";
 
 const GUEST_LIMIT = 20;
 
+/** Maps channel health_status to badge classes, dot class, label, and thumb overlay class. */
+function getTvStreamStatus(healthStatus) {
+  const s = healthStatus || "unknown";
+  if (s === "verified") {
+    return {
+      badgeClass: "channel-stream-badge badge-verified status-verified",
+      dotClass: "verified",
+      label: "VERIFIED",
+      thumbClass: "",
+    };
+  }
+  if (s === "online" || s === "manifest_only") {
+    return {
+      badgeClass: "channel-stream-badge badge-manifest status-live-partial",
+      dotClass: s === "manifest_only" ? "manifest_only" : "online",
+      label: "LIVE",
+      thumbClass: "partial",
+    };
+  }
+  if (s === "offline") {
+    return {
+      badgeClass: "channel-stream-badge status-offline",
+      dotClass: "offline",
+      label: "OFFLINE",
+      thumbClass: "down",
+    };
+  }
+  if (s === "timeout") {
+    return {
+      badgeClass: "channel-stream-badge status-timeout",
+      dotClass: "timeout",
+      label: "SLOW",
+      thumbClass: "slow",
+    };
+  }
+  if (s === "error") {
+    return {
+      badgeClass: "channel-stream-badge status-neutral",
+      dotClass: "error",
+      label: "ERROR",
+      thumbClass: "neutral",
+    };
+  }
+  if (s === "geo_blocked") {
+    return {
+      badgeClass: "channel-stream-badge status-neutral",
+      dotClass: "geo_blocked",
+      label: "GEO BLOCKED",
+      thumbClass: "neutral",
+    };
+  }
+  return {
+    badgeClass: "channel-stream-badge status-neutral",
+    dotClass: "unknown",
+    label: "UNKNOWN",
+    thumbClass: "neutral",
+  };
+}
+
 export default function ChannelGrid({
   channels,
   loading,
@@ -177,6 +236,7 @@ function GuestBanner({ onLogin, total, type }) {
 
 function ChannelCard({ channel, onClick, favorited, onToggleFavorite, isGuest }) {
   const cats = channel.categories ? channel.categories.split(";").filter(Boolean) : [];
+  const streamStatus = channel.stream_url ? getTvStreamStatus(channel.health_status) : null;
 
   return (
     <div className="channel-card" onClick={onClick}>
@@ -221,10 +281,10 @@ function ChannelCard({ channel, onClick, favorited, onToggleFavorite, isGuest })
         {cats.slice(0, 2).map((c) => (
           <span key={c} className="channel-tag">{c}</span>
         ))}
-        {channel.stream_url && (
-          <span className={`channel-stream-badge ${channel.health_status === "online" ? "status-online" : channel.health_status === "offline" || channel.health_status === "error" ? "status-offline" : channel.health_status === "timeout" ? "status-timeout" : ""}`}>
-            <span className={`status-dot ${channel.health_status}`} />
-            {channel.health_status === "online" ? "LIVE" : channel.health_status === "offline" || channel.health_status === "error" ? "DOWN" : channel.health_status === "timeout" ? "SLOW" : "LIVE"}
+        {streamStatus && (
+          <span className={streamStatus.badgeClass}>
+            <span className={`status-dot ${streamStatus.dotClass}`} />
+            {streamStatus.label}
           </span>
         )}
       </div>
@@ -234,6 +294,7 @@ function ChannelCard({ channel, onClick, favorited, onToggleFavorite, isGuest })
 
 function ChannelRow({ channel, onClick, favorited, onToggleFavorite, isGuest }) {
   const cats = channel.categories ? channel.categories.split(";").filter(Boolean) : [];
+  const streamStatus = channel.stream_url ? getTvStreamStatus(channel.health_status) : null;
 
   return (
     <div className="list-row" onClick={onClick}>
@@ -268,10 +329,10 @@ function ChannelRow({ channel, onClick, favorited, onToggleFavorite, isGuest }) 
         </div>
       </div>
       <div className="list-row-actions">
-        {channel.stream_url && (
-          <span className={`channel-stream-badge ${channel.health_status === "online" ? "status-online" : channel.health_status === "offline" || channel.health_status === "error" ? "status-offline" : channel.health_status === "timeout" ? "status-timeout" : ""}`}>
-            <span className={`status-dot ${channel.health_status}`} />
-            {channel.health_status === "online" ? "LIVE" : channel.health_status === "offline" || channel.health_status === "error" ? "DOWN" : channel.health_status === "timeout" ? "SLOW" : "LIVE"}
+        {streamStatus && (
+          <span className={streamStatus.badgeClass}>
+            <span className={`status-dot ${streamStatus.dotClass}`} />
+            {streamStatus.label}
           </span>
         )}
         {!isGuest && (
@@ -292,6 +353,7 @@ function ChannelRow({ channel, onClick, favorited, onToggleFavorite, isGuest }) 
 
 function ChannelThumb({ channel, onClick, favorited, onToggleFavorite, isGuest }) {
   const cats = channel.categories ? channel.categories.split(";").filter(Boolean) : [];
+  const streamStatus = channel.stream_url ? getTvStreamStatus(channel.health_status) : null;
 
   return (
     <div className="thumb-card" onClick={onClick}>
@@ -315,10 +377,10 @@ function ChannelThumb({ channel, onClick, favorited, onToggleFavorite, isGuest }
             <rect x="2" y="7" width="20" height="15" rx="2" ry="2" /><polyline points="17 2 12 7 7 2" />
           </svg>
         </div>
-        {channel.stream_url && (
-          <span className={`thumb-status ${channel.health_status === "offline" || channel.health_status === "error" ? "down" : ""}`}>
-            <span className={`status-dot ${channel.health_status || "unknown"}`} />
-            {channel.health_status === "online" ? "LIVE" : channel.health_status === "offline" || channel.health_status === "error" ? "DOWN" : "LIVE"}
+        {streamStatus && (
+          <span className={`thumb-status ${streamStatus.thumbClass}`.trim()}>
+            <span className={`status-dot ${streamStatus.dotClass}`} />
+            {streamStatus.label}
           </span>
         )}
         {!isGuest && (

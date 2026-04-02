@@ -2,6 +2,35 @@ import { useEffect, useRef, useState } from "react";
 import Hls from "hls.js";
 import { fetchStreams, runHealthCheck } from "../api/channels";
 
+function healthCheckPresentation(status) {
+  const s = status || "unknown";
+  const table = {
+    verified: { label: "Verified", resultClass: "status-verified", dotClass: "verified" },
+    manifest_only: { label: "Manifest only", resultClass: "status-manifest", dotClass: "manifest_only" },
+    online: { label: "Online", resultClass: "status-live-partial", dotClass: "online" },
+    offline: { label: "Offline", resultClass: "status-offline", dotClass: "offline" },
+    timeout: { label: "Slow", resultClass: "status-timeout", dotClass: "timeout" },
+    error: { label: "Error", resultClass: "status-error", dotClass: "error" },
+    unknown: { label: "Unknown", resultClass: "status-unknown", dotClass: "unknown" },
+    geo_blocked: { label: "Geo blocked", resultClass: "status-geo_blocked", dotClass: "geo_blocked" },
+  };
+  return table[s] || table.unknown;
+}
+
+function HealthCheckResultRow({ result }) {
+  const pres = healthCheckPresentation(result.status);
+  return (
+    <div className={`healthcheck-result ${pres.resultClass}`}>
+      <span className={`status-dot ${pres.dotClass}`} />
+      <span className="healthcheck-status">{pres.label}</span>
+      <span className="healthcheck-detail">
+        {result.response_time_ms > 0 && `${result.response_time_ms}ms`}
+        {result.detail && ` · ${result.detail}`}
+      </span>
+    </div>
+  );
+}
+
 export default function VideoPlayer({ channel, onClose, isFavorite, onToggleFavorite, isGuest, onLogin }) {
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
@@ -137,20 +166,7 @@ export default function VideoPlayer({ channel, onClose, isFavorite, onToggleFavo
               )}
             </button>
 
-            {healthResult && (
-              <div className={`healthcheck-result status-${healthResult.status}`}>
-                <span className={`status-dot ${healthResult.status}`} />
-                <span className="healthcheck-status">
-                  {healthResult.status === "online" ? "Online" :
-                   healthResult.status === "offline" ? "Offline" :
-                   healthResult.status === "timeout" ? "Timeout" : "Error"}
-                </span>
-                <span className="healthcheck-detail">
-                  {healthResult.response_time_ms > 0 && `${healthResult.response_time_ms}ms`}
-                  {healthResult.detail && ` · ${healthResult.detail}`}
-                </span>
-              </div>
-            )}
+            {healthResult && <HealthCheckResultRow result={healthResult} />}
 
             {streams.length > 1 && (
               <div className="stream-switcher">

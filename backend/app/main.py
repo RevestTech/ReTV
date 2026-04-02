@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 
 from app.database import engine, Base, async_session
 from app.routers import channels, categories, healthcheck, radio, auth
@@ -12,6 +13,12 @@ from app.services.radio_service import sync_radio_stations
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+_MIGRATIONS = [
+    "ALTER TABLE channels ADD COLUMN IF NOT EXISTS last_validated_at VARCHAR(50) DEFAULT '';",
+    "ALTER TABLE radio_stations ADD COLUMN IF NOT EXISTS health_status VARCHAR(20) DEFAULT 'unknown';",
+    "ALTER TABLE radio_stations ADD COLUMN IF NOT EXISTS health_checked_at VARCHAR(50) DEFAULT '';",
+]
 
 
 async def initial_sync():
@@ -33,6 +40,12 @@ async def initial_sync():
 async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    async with engine.begin() as conn:
+        for sql in _MIGRATIONS:
+            try:
+                await conn.execute(text(sql))
+            except Exception:
+                pass
     logger.info("Database tables created")
 
     sync_task = asyncio.create_task(initial_sync())
@@ -59,6 +72,7 @@ app.add_middleware(
 app.include_router(channels.router)
 app.include_router(categories.router)
 app.include_router(healthcheck.router)
+app.include_router(healthcheck.validator_router)
 app.include_router(radio.router)
 app.include_router(auth.router)
 

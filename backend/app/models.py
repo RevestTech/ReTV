@@ -97,6 +97,7 @@ class Channel(Base):
     updated_at = Column(String(50), default="")
     health_status = Column(String(20), default="unknown")
     health_checked_at = Column(String(50), default="")
+    last_validated_at = Column(String(50), default="")
 
     category = relationship("Category", back_populates="channels")
 
@@ -123,6 +124,8 @@ class RadioStation(Base):
     bitrate = Column(Integer, default=0)
     votes = Column(Integer, default=0)
     last_check_ok = Column(Boolean, default=False)
+    health_status = Column(String(20), default="unknown")
+    health_checked_at = Column(String(50), default="")
     geo_lat = Column(String(50), default="")
     geo_long = Column(String(50), default="")
 

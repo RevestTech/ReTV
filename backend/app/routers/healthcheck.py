@@ -2,10 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.schemas import HealthCheckResult
+from app.schemas import HealthCheckResult, ValidatorStatusOut, ValidatorStatusBuckets
 from app.services.healthcheck_service import check_channel, check_channels_batch
+from app.services.validator_service import get_validator_status
 
 router = APIRouter(prefix="/api/healthcheck", tags=["healthcheck"])
+
+validator_router = APIRouter(prefix="/api/validator", tags=["validator"])
 
 
 @router.post("/{channel_id}", response_model=HealthCheckResult)
@@ -25,3 +28,13 @@ async def healthcheck_batch(
         raise HTTPException(status_code=400, detail="Maximum 50 channels per batch")
     results = await check_channels_batch(db, channel_ids)
     return [r for r in results if "error" not in r]
+
+
+@validator_router.get("/status", response_model=ValidatorStatusOut)
+async def validator_status(db: AsyncSession = Depends(get_db)):
+    data = await get_validator_status(db)
+    return ValidatorStatusOut(
+        channels=ValidatorStatusBuckets(**data["channels"]),
+        radio=ValidatorStatusBuckets(**data["radio"]),
+        last_validation_cycle_at=data["last_validation_cycle_at"],
+    )

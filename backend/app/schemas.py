@@ -41,6 +41,7 @@ class ChannelOut(BaseModel):
     is_active: bool = True
     health_status: str = "unknown"
     health_checked_at: str = ""
+    last_validated_at: str = ""
 
     model_config = {"from_attributes": True}
 
@@ -97,6 +98,8 @@ class RadioStationOut(BaseModel):
     bitrate: int = 0
     votes: int = 0
     last_check_ok: bool = False
+    health_status: str = "unknown"
+    health_checked_at: str = ""
 
     model_config = {"from_attributes": True}
 
@@ -136,3 +139,16 @@ class StatsOut(BaseModel):
     total_countries: int
     total_streams: int
     total_radio_stations: int = 0
+
+
+class ValidatorStatusBuckets(BaseModel):
+    total: int
+    verified: int
+    offline: int
+    unknown: int
+
+
+class ValidatorStatusOut(BaseModel):
+    channels: ValidatorStatusBuckets
+    radio: ValidatorStatusBuckets
+    last_validation_cycle_at: str = ""

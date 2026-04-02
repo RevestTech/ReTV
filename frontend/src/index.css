@@ -534,6 +534,21 @@ body {
   background: rgba(244, 67, 54, 0.85);
 }
 
+.thumb-status.partial {
+  background: rgba(234, 179, 8, 0.92);
+  color: #1a1a1a;
+}
+
+.thumb-status.slow {
+  background: rgba(255, 152, 0, 0.92);
+  color: #1a1a1a;
+}
+
+.thumb-status.neutral {
+  background: rgba(107, 107, 128, 0.92);
+  color: #fff;
+}
+
 .thumb-status .status-dot {
   width: 6px;
   height: 6px;
@@ -793,6 +808,21 @@ body {
   color: #ff9800;
 }
 
+.channel-stream-badge.status-neutral {
+  background: rgba(107, 107, 128, 0.2);
+  color: var(--text-muted);
+}
+
+.badge-verified {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.badge-manifest {
+  background: rgba(234, 179, 8, 0.15);
+  color: #eab308;
+}
+
 /* Health status dots */
 .status-dot {
   width: 6px;
@@ -803,12 +833,24 @@ body {
   background: var(--text-muted);
 }
 
-.status-dot.online {
-  background: #4caf50;
-  box-shadow: 0 0 4px #4caf50;
+.status-dot.verified {
+  background: #22c55e;
+  box-shadow: 0 0 4px #22c55e;
 }
 
-.status-dot.offline, .status-dot.error {
+/* Quick-check / manifest-only “live” — not fully verified */
+.status-dot.online,
+.status-dot.manifest_only {
+  background: #eab308;
+  box-shadow: 0 0 4px rgba(234, 179, 8, 0.7);
+}
+
+.status-dot.offline {
+  background: #f44336;
+  box-shadow: 0 0 4px #f44336;
+}
+
+.status-dot.error {
   background: #f44336;
   box-shadow: 0 0 4px #f44336;
 }
@@ -816,6 +858,12 @@ body {
 .status-dot.timeout {
   background: #ff9800;
   box-shadow: 0 0 4px #ff9800;
+}
+
+.status-dot.unknown,
+.status-dot.geo_blocked {
+  background: var(--text-muted);
+  box-shadow: none;
 }
 
 /* Pagination */
@@ -1006,16 +1054,34 @@ body {
   border: 1px solid var(--border);
 }
 
-.healthcheck-result.status-online {
-  border-color: rgba(76, 175, 80, 0.4);
+.healthcheck-result.status-verified {
+  border-color: rgba(34, 197, 94, 0.45);
 }
 
-.healthcheck-result.status-offline, .healthcheck-result.status-error {
+.healthcheck-result.status-live-partial,
+.healthcheck-result.status-manifest {
+  border-color: rgba(234, 179, 8, 0.5);
+}
+
+.healthcheck-result.status-online {
+  border-color: rgba(234, 179, 8, 0.5);
+}
+
+.healthcheck-result.status-offline {
+  border-color: rgba(244, 67, 54, 0.4);
+}
+
+.healthcheck-result.status-error {
   border-color: rgba(244, 67, 54, 0.4);
 }
 
 .healthcheck-result.status-timeout {
   border-color: rgba(255, 152, 0, 0.4);
+}
+
+.healthcheck-result.status-unknown,
+.healthcheck-result.status-geo_blocked {
+  border-color: rgba(107, 107, 128, 0.45);
 }
 
 .healthcheck-status {
