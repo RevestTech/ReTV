@@ -310,6 +310,10 @@ export default function App() {
         user={auth.user}
         onLogin={() => setShowLogin(true)}
         onLogout={handleLogout}
+        showFavorites={showFavorites}
+        onToggleFavorites={handleToggleFavorites}
+        favoritesCount={favoritesCount + radioFavoritesCount}
+        isGuest={isGuest}
       />
       {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
       <div className="layout">
