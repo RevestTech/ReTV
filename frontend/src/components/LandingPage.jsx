@@ -25,7 +25,7 @@ export default function LandingPage({
   }, []);
 
   const initGsi = useCallback(() => {
-    if (!googleClientId || !window.google?.accounts?.id || !googleBtnRef.current) return;
+    if (!googleClientId || !window.google?.accounts?.id || !googleBtnRef.current) return false;
     if (!gsiInitialized) {
       window.google.accounts.id.initialize({
         client_id: googleClientId,
@@ -41,9 +41,16 @@ export default function LandingPage({
       text: "signin_with",
       shape: "pill",
     });
+    return true;
   }, [googleClientId]);
 
-  useEffect(() => { initGsi(); }, [initGsi]);
+  useEffect(() => {
+    if (initGsi()) return;
+    const interval = setInterval(() => {
+      if (initGsi()) clearInterval(interval);
+    }, 300);
+    return () => clearInterval(interval);
+  }, [initGsi]);
 
   useEffect(() => {
     const handler = (event) => {
