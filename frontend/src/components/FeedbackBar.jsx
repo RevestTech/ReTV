@@ -40,9 +40,18 @@ export default function FeedbackBar({
   onVote,
   isGuest,
   onLogin,
+  onGuestNotice,
 }) {
   const handleClick = (voteType) => {
-    if (isGuest) { onLogin?.(); return; }
+    if (isGuest) {
+      const msg =
+        itemType === "tv"
+          ? "Sign in to rate channels."
+          : "Sign in to rate stations.";
+      onGuestNotice?.(msg);
+      onLogin?.();
+      return;
+    }
     onVote?.(itemType, itemId, voteType);
   };
 

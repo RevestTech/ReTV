@@ -1,10 +1,32 @@
 import { useEffect, useState } from "react";
 
-export default function MiniPlayer({ station, audioRef, onExpand, onStop }) {
+export default function MiniPlayer({
+  variant = "radio",
+  station,
+  channel,
+  audioRef,
+  videoRef,
+  onExpand,
+  onStop,
+}) {
+  const isTv = variant === "tv";
+  const media = isTv ? channel : station;
   const [playing, setPlaying] = useState(false);
   const [artFailed, setArtFailed] = useState(false);
 
   useEffect(() => {
+    if (isTv) {
+      const video = videoRef?.current;
+      if (!video) return;
+      const sync = () => setPlaying(!video.paused);
+      sync();
+      video.addEventListener("play", sync);
+      video.addEventListener("pause", sync);
+      return () => {
+        video.removeEventListener("play", sync);
+        video.removeEventListener("pause", sync);
+      };
+    }
     const audio = audioRef?.current;
     if (!audio) return;
 
@@ -18,13 +40,23 @@ export default function MiniPlayer({ station, audioRef, onExpand, onStop }) {
       audio.removeEventListener("pause", sync);
       audio.removeEventListener("ended", sync);
     };
-  }, [audioRef, station]);
+  }, [audioRef, videoRef, station, channel, isTv]);
 
   useEffect(() => {
     setArtFailed(false);
-  }, [station]);
+  }, [station, channel, isTv]);
 
   const togglePlay = () => {
+    if (isTv) {
+      const video = videoRef?.current;
+      if (!video) return;
+      if (video.paused) {
+        video.play().catch(() => {});
+      } else {
+        video.pause();
+      }
+      return;
+    }
     const audio = audioRef?.current;
     if (!audio) return;
     if (audio.paused) {
@@ -34,31 +66,41 @@ export default function MiniPlayer({ station, audioRef, onExpand, onStop }) {
     }
   };
 
+  const artUrl = isTv ? channel?.logo : station?.favicon;
+  const title = media?.name ?? "";
+
   return (
-    <div className="mini-player" role="region" aria-label="Now playing radio">
-      <button type="button" className="mini-player-expand-hit" onClick={onExpand} aria-label={`Expand ${station.name}`}>
+    <div className="mini-player" role="region" aria-label={isTv ? "Now playing television" : "Now playing radio"}>
+      <button type="button" className="mini-player-expand-hit" onClick={onExpand} aria-label={`Expand ${title}`}>
         <span className="mini-player-art-wrap" aria-hidden>
-          {station.favicon && !artFailed ? (
+          {artUrl && !artFailed ? (
             <img
               className="mini-player-art"
-              src={station.favicon}
+              src={artUrl}
               alt=""
               onError={() => setArtFailed(true)}
             />
           ) : null}
-          {(!station.favicon || artFailed) && (
+          {(!artUrl || artFailed) && (
             <div className="mini-player-art-placeholder">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="2" />
-                <path d="M16.24 7.76a6 6 0 0 1 0 8.49" />
-                <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-              </svg>
+              {isTv ? (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="7" width="20" height="15" rx="2" ry="2" />
+                  <polyline points="17 2 12 7 7 2" />
+                </svg>
+              ) : (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="2" />
+                  <path d="M16.24 7.76a6 6 0 0 1 0 8.49" />
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                </svg>
+              )}
             </div>
           )}
         </span>
         <span className="mini-player-info">
-          <span className="mini-player-label">Radio</span>
-          <span className="mini-player-name">{station.name}</span>
+          <span className="mini-player-label">{isTv ? "Television" : "Radio"}</span>
+          <span className="mini-player-name">{title}</span>
         </span>
       </button>
 

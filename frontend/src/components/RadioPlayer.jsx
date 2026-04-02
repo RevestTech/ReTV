@@ -4,12 +4,14 @@ import FeedbackBar from "./FeedbackBar";
 export default function RadioPlayer({
   station,
   onClose,
+  onMinimize,
   audioRef,
   minimized = false,
   isFavorite,
   onToggleFavorite,
   isGuest,
   onLogin,
+  onGuestNotice,
   myVotes,
   voteSummary,
   onVote,
@@ -36,13 +38,12 @@ export default function RadioPlayer({
   }, [streamUrl, audioRef]);
 
   useEffect(() => {
-    if (minimized) return;
     const handleKey = (e) => {
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [onClose, minimized]);
+  }, [onClose]);
 
   useEffect(() => {
     const audio = audioRef?.current;
@@ -73,7 +74,7 @@ export default function RadioPlayer({
         <div className="modal-header">
           <div>
             <h3 id="radio-player-title">{station.name}</h3>
-            <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+            <span className="radio-player-meta">
               {station.country}
               {station.language && ` · ${station.language}`}
               {station.codec && ` · ${station.codec}`}
@@ -81,7 +82,23 @@ export default function RadioPlayer({
             </span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {!isGuest && (
+            {isGuest ? (
+              <button
+                type="button"
+                className="favorite-btn favorite-btn--guest"
+                onClick={() => {
+                  onGuestNotice?.("Sign in to save favorites.");
+                  onLogin?.();
+                }}
+                title="Sign in to save favorites"
+                aria-label="Sign in to save favorites"
+                style={{ position: "static" }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
+              </button>
+            ) : (
               <button
                 className={`favorite-btn ${isFavorite ? "favorited" : ""}`}
                 onClick={onToggleFavorite}
@@ -93,7 +110,20 @@ export default function RadioPlayer({
                 </svg>
               </button>
             )}
-            <button className="modal-close" onClick={onClose} aria-label="Close player">×</button>
+            {typeof onMinimize === "function" && (
+              <button
+                type="button"
+                className="modal-minimize"
+                onClick={onMinimize}
+                aria-label="Minimize player — keep playing"
+                title="Minimize (keep playing)"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              </button>
+            )}
+            <button className="modal-close" onClick={onClose} aria-label="Stop and close player">×</button>
           </div>
         </div>
         <div className="radio-player-body">
@@ -130,7 +160,7 @@ export default function RadioPlayer({
             ref={audioRef}
             controls={showAudioControls}
             className={showAudioControls ? undefined : "radio-audio-hidden"}
-            style={showAudioControls ? { width: "100%", marginTop: 16 } : undefined}
+            style={showAudioControls ? { width: "100%" } : undefined}
           />
 
           {tags.length > 0 && (
@@ -149,6 +179,7 @@ export default function RadioPlayer({
             onVote={onVote}
             isGuest={isGuest}
             onLogin={onLogin}
+            onGuestNotice={onGuestNotice}
           />
 
           {station.homepage && (

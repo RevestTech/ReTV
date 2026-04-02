@@ -6,6 +6,7 @@ import RadioGrid from "./components/RadioGrid";
 import VideoPlayer from "./components/VideoPlayer";
 import RadioPlayer from "./components/RadioPlayer";
 import MiniPlayer from "./components/MiniPlayer";
+import GuestNoticeToast from "./components/GuestNoticeToast";
 import FavoritesView from "./components/FavoritesView";
 import RecentlyPlayed from "./components/RecentlyPlayed";
 import useFavorites, { useRadioFavorites } from "./hooks/useFavorites";
@@ -120,6 +121,7 @@ export default function App() {
   const [radioTotal, setRadioTotal] = useState(0);
   const [selectedStation, setSelectedStation] = useState(null);
   const [radioModalOpen, setRadioModalOpen] = useState(true);
+  const [tvModalOpen, setTvModalOpen] = useState(true);
   const radioAudioRef = useRef(null);
   const [showRadioFavorites, setShowRadioFavorites] = useState(IU.showRadioFavorites);
 
@@ -127,6 +129,10 @@ export default function App() {
     selectedStation == null
       ? null
       : { type: "radio", station: selectedStation, modalOpen: radioModalOpen };
+
+  const showDockedPlayer =
+    (nowPlaying && !nowPlaying.modalOpen) ||
+    Boolean(selectedChannel && !tvModalOpen);
 
   const [debouncedTvSearch, setDebouncedTvSearch] = useState(IU.search);
   const [debouncedRadioSearch, setDebouncedRadioSearch] = useState(IU.radioSearch);
@@ -196,7 +202,10 @@ export default function App() {
   const votes = useVotes();
 
   useEffect(() => {
-    if (selectedChannel) addRecent("tv", selectedChannel);
+    if (selectedChannel) {
+      setTvModalOpen(true);
+      addRecent("tv", selectedChannel);
+    }
   }, [selectedChannel, addRecent]);
 
   useEffect(() => {
@@ -512,6 +521,26 @@ export default function App() {
   const searching = mode === "tv" ? Boolean(search.trim()) : Boolean(radioSearch.trim());
   const showRecentRow = !showFavorites && !searching;
 
+  const [guestNotice, setGuestNotice] = useState(null);
+  const guestNoticeTimerRef = useRef(null);
+  const onGuestNotice = useCallback((msg) => {
+    setGuestNotice(msg);
+    if (guestNoticeTimerRef.current) clearTimeout(guestNoticeTimerRef.current);
+    guestNoticeTimerRef.current = setTimeout(() => setGuestNotice(null), 6500);
+  }, []);
+  const dismissGuestNotice = useCallback(() => {
+    setGuestNotice(null);
+    if (guestNoticeTimerRef.current) clearTimeout(guestNoticeTimerRef.current);
+  }, []);
+  const guestNoticeSignIn = useCallback(() => {
+    dismissGuestNotice();
+    setShowLogin(true);
+  }, [dismissGuestNotice]);
+
+  useEffect(() => () => {
+    if (guestNoticeTimerRef.current) clearTimeout(guestNoticeTimerRef.current);
+  }, []);
+
   return (
     <>
       <Header
@@ -524,6 +553,8 @@ export default function App() {
         }}
         sidebarOpen={sidebarOpen}
         onToggleSidebar={() => setSidebarOpen((v) => !v)}
+        sidebarRailCollapsed={sidebarRailCollapsed}
+        onToggleSidebarRail={() => setSidebarRailCollapsed((v) => !v)}
         user={auth.user}
         onLogin={() => setShowLogin(true)}
         onLogout={handleLogout}
@@ -531,6 +562,7 @@ export default function App() {
         onToggleFavorites={handleToggleFavorites}
         favoritesCount={favoritesCount + radioFavoritesCount}
         isGuest={isGuest}
+        onGuestNotice={onGuestNotice}
       />
       {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
       <div className="layout">
@@ -573,8 +605,9 @@ export default function App() {
           }}
           isGuest={isGuest}
           onLogin={() => setShowLogin(true)}
+          onGuestNotice={onGuestNotice}
         />
-        <main className={`main-content${nowPlaying && !nowPlaying.modalOpen ? " main-content--mini-player" : ""}`}>
+        <main className={`main-content${showDockedPlayer ? " main-content--mini-player" : ""}`}>
           {showRecentRow && (
             <RecentlyPlayed recentItems={recentItems} onSelect={handleRecentSelect} />
           )}
@@ -615,6 +648,7 @@ export default function App() {
               onViewToggle={handleViewToggle}
               isGuest={isGuest}
               onLogin={() => setShowLogin(true)}
+              onGuestNotice={onGuestNotice}
               getVoteSummary={(id) => votes.getSummaryFor("tv", id)}
               stats={stats}
             />
@@ -642,6 +676,7 @@ export default function App() {
               onViewToggle={handleViewToggle}
               isGuest={isGuest}
               onLogin={() => setShowLogin(true)}
+              onGuestNotice={onGuestNotice}
               getVoteSummary={(id) => votes.getSummaryFor("radio", id)}
               stats={stats}
             />
@@ -651,11 +686,15 @@ export default function App() {
       {selectedChannel && (
         <VideoPlayer
           channel={selectedChannel}
+          minimized={!tvModalOpen}
+          onMinimize={() => setTvModalOpen(false)}
+          onExpand={() => setTvModalOpen(true)}
           onClose={closeTvPlayer}
           isFavorite={isFavorite(selectedChannel.id)}
           onToggleFavorite={() => toggleFavorite(selectedChannel)}
           isGuest={isGuest}
           onLogin={() => setShowLogin(true)}
+          onGuestNotice={onGuestNotice}
           myVotes={votes.getMyVotesFor("tv", selectedChannel.id)}
           voteSummary={votes.getSummaryFor("tv", selectedChannel.id)}
           onVote={votes.submitVote}
@@ -666,11 +705,13 @@ export default function App() {
           station={selectedStation}
           audioRef={radioAudioRef}
           minimized={!radioModalOpen}
-          onClose={() => setRadioModalOpen(false)}
+          onMinimize={() => setRadioModalOpen(false)}
+          onClose={stopRadio}
           isFavorite={isRadioFavorite(selectedStation.id)}
           onToggleFavorite={() => toggleRadioFavorite(selectedStation)}
           isGuest={isGuest}
           onLogin={() => setShowLogin(true)}
+          onGuestNotice={onGuestNotice}
           myVotes={votes.getMyVotesFor("radio", selectedStation.id)}
           voteSummary={votes.getSummaryFor("radio", selectedStation.id)}
           onVote={votes.submitVote}
@@ -684,6 +725,11 @@ export default function App() {
           onStop={stopRadio}
         />
       )}
+      <GuestNoticeToast
+        message={guestNotice}
+        onDismiss={dismissGuestNotice}
+        onSignIn={guestNoticeSignIn}
+      />
       {showLogin && !auth.user && (
         <Suspense fallback={null}>
           <LandingPage

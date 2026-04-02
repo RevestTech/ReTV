@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { fetchStreams, runHealthCheck } from "../api/channels";
 import FeedbackBar from "./FeedbackBar";
+import MiniPlayer from "./MiniPlayer";
 
 function healthCheckPresentation(status) {
   const s = status || "unknown";
@@ -31,7 +32,21 @@ function HealthCheckResultRow({ result }) {
   );
 }
 
-export default function VideoPlayer({ channel, onClose, isFavorite, onToggleFavorite, isGuest, onLogin, myVotes, voteSummary, onVote }) {
+export default function VideoPlayer({
+  channel,
+  onClose,
+  onMinimize,
+  onExpand,
+  minimized = false,
+  isFavorite,
+  onToggleFavorite,
+  isGuest,
+  onLogin,
+  onGuestNotice,
+  myVotes,
+  voteSummary,
+  onVote,
+}) {
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
   const [streams, setStreams] = useState([]);
@@ -105,7 +120,14 @@ export default function VideoPlayer({ channel, onClose, isFavorite, onToggleFavo
   };
 
   return (
-    <div className="modal-overlay channel-player-modal" role="dialog" aria-modal="true" aria-labelledby="player-title">
+    <>
+    <div
+      className={`modal-overlay channel-player-modal${minimized ? " channel-player-modal-minimized" : ""}`}
+      role="dialog"
+      aria-modal={!minimized}
+      aria-hidden={minimized || undefined}
+      aria-labelledby={minimized ? undefined : "player-title"}
+    >
       <div className="modal-content channel-player-modal__shell" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header channel-modal-header">
           <div className="channel-modal-header__main">
@@ -124,7 +146,22 @@ export default function VideoPlayer({ channel, onClose, isFavorite, onToggleFavo
             )}
           </div>
           <div className="channel-modal-header__actions">
-            {!isGuest && (
+            {isGuest ? (
+              <button
+                type="button"
+                className="modal-favorite-btn modal-favorite-btn--guest"
+                onClick={() => {
+                  onGuestNotice?.("Sign in to save favorites.");
+                  onLogin?.();
+                }}
+                title="Sign in to save favorites"
+                aria-label="Sign in to save favorites"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
+              </button>
+            ) : (
               <button
                 className={`modal-favorite-btn ${isFavorite ? "favorited" : ""}`}
                 onClick={onToggleFavorite}
@@ -135,7 +172,20 @@ export default function VideoPlayer({ channel, onClose, isFavorite, onToggleFavo
                 </svg>
               </button>
             )}
-            <button className="modal-close channel-modal-close" onClick={onClose} aria-label="Close player">×</button>
+            {typeof onMinimize === "function" && (
+              <button
+                type="button"
+                className="modal-minimize channel-modal-minimize"
+                onClick={onMinimize}
+                aria-label="Minimize player — keep playing"
+                title="Minimize (keep playing)"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              </button>
+            )}
+            <button className="modal-close channel-modal-close" onClick={onClose} aria-label="Stop and close player">×</button>
           </div>
         </div>
         <div className="modal-body channel-modal-body">
@@ -217,9 +267,20 @@ export default function VideoPlayer({ channel, onClose, isFavorite, onToggleFavo
             onVote={onVote}
             isGuest={isGuest}
             onLogin={onLogin}
+            onGuestNotice={onGuestNotice}
           />
         </div>
       </div>
     </div>
+    {minimized && onExpand && (
+      <MiniPlayer
+        variant="tv"
+        channel={channel}
+        videoRef={videoRef}
+        onExpand={onExpand}
+        onStop={onClose}
+      />
+    )}
+    </>
   );
 }

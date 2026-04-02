@@ -94,6 +94,7 @@ export default function ChannelGrid({
   onViewToggle,
   isGuest,
   onLogin,
+  onGuestNotice,
   getVoteSummary,
   stats,
 }) {
@@ -260,7 +261,13 @@ export default function ChannelGrid({
                   channel: ch,
                   onClick: () => onSelect(ch),
                   favorited: !isGuest && isFavorite(ch.id),
-                  onToggleFavorite: isGuest ? (e) => { e.stopPropagation(); onLogin(); } : (e) => { e.stopPropagation(); onToggleFavorite(ch); },
+                  onToggleFavorite: isGuest
+                    ? (e) => {
+                        e.stopPropagation();
+                        onGuestNotice?.("Sign in to save favorites.");
+                        onLogin();
+                      }
+                    : (e) => { e.stopPropagation(); onToggleFavorite(ch); },
                   isGuest,
                   voteSummary: getVoteSummary ? getVoteSummary(ch.id) : {},
                 };
@@ -319,7 +326,19 @@ function ChannelCard({ channel, onClick, favorited, onToggleFavorite, isGuest, v
 
   return (
     <div className="channel-card" onClick={onClick} onKeyDown={(e) => { if (e.key === "Enter") onClick(); }} tabIndex={0} role="button">
-      {!isGuest && (
+      {isGuest ? (
+        <button
+          type="button"
+          className="favorite-btn favorite-btn--guest"
+          onClick={onToggleFavorite}
+          title="Sign in to save favorites"
+          aria-label="Sign in to save favorites"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+        </button>
+      ) : (
         <button
           className={`favorite-btn ${favorited ? "favorited" : ""}`}
           onClick={onToggleFavorite}
@@ -416,7 +435,19 @@ function ChannelRow({ channel, onClick, favorited, onToggleFavorite, isGuest, vo
             {streamStatus.label}
           </span>
         )}
-        {!isGuest && (
+        {isGuest ? (
+          <button
+            type="button"
+            className="favorite-btn list-fav-btn favorite-btn--guest"
+            onClick={onToggleFavorite}
+            title="Sign in to save favorites"
+            aria-label="Sign in to save favorites"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+          </button>
+        ) : (
           <button
             className={`favorite-btn list-fav-btn ${favorited ? "favorited" : ""}`}
             onClick={onToggleFavorite}
@@ -464,7 +495,19 @@ function ChannelThumb({ channel, onClick, favorited, onToggleFavorite, isGuest, 
             {streamStatus.label}
           </span>
         )}
-        {!isGuest && (
+        {isGuest ? (
+          <button
+            type="button"
+            className="favorite-btn thumb-fav favorite-btn--guest"
+            onClick={onToggleFavorite}
+            title="Sign in to save favorites"
+            aria-label="Sign in to save favorites"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+          </button>
+        ) : (
           <button
             className={`favorite-btn thumb-fav ${favorited ? "favorited" : ""}`}
             onClick={onToggleFavorite}

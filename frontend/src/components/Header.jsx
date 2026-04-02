@@ -5,8 +5,9 @@ export default function Header({
   mode, onModeSwitch,
   search, onSearch,
   sidebarOpen, onToggleSidebar,
+  sidebarRailCollapsed, onToggleSidebarRail,
   user, onLogin, onLogout,
-  showFavorites, onToggleFavorites, favoritesCount, isGuest,
+  showFavorites, onToggleFavorites, favoritesCount, isGuest, onGuestNotice,
 }) {
   const [localSearch, setLocalSearch] = useState(search);
   const debounceRef = useRef(null);
@@ -68,7 +69,36 @@ export default function Header({
       </div>
 
       <div className="header-right">
-        {!isGuest && (
+        {typeof onToggleSidebarRail === "function" && sidebarRailCollapsed && (
+          <button
+            type="button"
+            className="header-filters-reveal"
+            onClick={onToggleSidebarRail}
+            aria-label="Show filters panel"
+            title="Show filters"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+            Show filters
+          </button>
+        )}
+        {isGuest ? (
+          <button
+            type="button"
+            className="header-fav-btn header-fav-btn--guest"
+            onClick={() => {
+              onGuestNotice?.("Sign in to view and save favorites.");
+              onLogin();
+            }}
+            aria-label="Favorites — sign in required"
+            title="Sign in to use favorites"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+          </button>
+        ) : (
           <button
             className={`header-fav-btn ${showFavorites ? "active" : ""}`}
             onClick={onToggleFavorites}

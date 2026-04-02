@@ -6,7 +6,7 @@ export default function Sidebar({
   mode,
   className,
   railCollapsed = false,
-  onToggleRail = () => {},
+  onToggleRail,
   categories,
   countries,
   activeCategories = [],
@@ -22,6 +22,7 @@ export default function Sidebar({
   onSelectTag,
   isGuest,
   onLogin,
+  onGuestNotice,
 }) {
   const [tab, setTab] = useState("categories");
   const [radioTab, setRadioTab] = useState("genres");
@@ -86,35 +87,50 @@ export default function Sidebar({
 
   const shellClass = `sidebar ${className || ""}${railCollapsed ? " sidebar--rail-collapsed" : ""}`;
 
-  const rail = (
-    <div className="sidebar-rail">
-      <button
-        type="button"
-        className="sidebar-rail-btn"
-        onClick={onToggleRail}
-        aria-label={railCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-        title={railCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-      >
-        {railCollapsed ? (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
-        ) : (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+  const panelFoot =
+    typeof onToggleRail === "function" && !railCollapsed ? (
+      <div className="sidebar-panel-foot">
+        <button
+          type="button"
+          className="sidebar-panel-foot-btn"
+          onClick={onToggleRail}
+          aria-label="Narrow filters panel"
+          title="Give more room to the grid"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <polyline points="15 18 9 12 15 6" />
           </svg>
-        )}
-      </button>
-    </div>
-  );
+          <span>Narrow filters</span>
+        </button>
+      </div>
+    ) : null;
 
   if (mode === "radio") {
     return (
       <aside className={shellClass}>
-        {rail}
         <div className="sidebar-body">
         <div className="sidebar-section">
-          {!isGuest && (
+          {isGuest ? (
+            <div
+              className="sidebar-item favorites-item favorites-item--guest"
+              onClick={() => {
+                onGuestNotice?.("Sign in to save favorites and sync across devices.");
+                onLogin?.();
+              }}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onGuestNotice?.("Sign in to save favorites and sync across devices."); onLogin?.(); } }}
+              tabIndex={0}
+              role="button"
+              title="Sign in to use favorites"
+            >
+              <span className="favorites-label">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
+                Favorites
+              </span>
+              <span className="favorites-guest-badge">Sign in</span>
+            </div>
+          ) : (
             <div
               className={`sidebar-item favorites-item ${showFavorites ? "active" : ""}`}
               onClick={onToggleFavorites}
@@ -179,16 +195,36 @@ export default function Sidebar({
           />
         )}
         </div>
+        {panelFoot}
       </aside>
     );
   }
 
   return (
     <aside className={shellClass}>
-      {rail}
       <div className="sidebar-body">
       <div className="sidebar-section">
-        {!isGuest && (
+        {isGuest ? (
+          <div
+            className="sidebar-item favorites-item favorites-item--guest"
+            onClick={() => {
+              onGuestNotice?.("Sign in to save favorites and sync across devices.");
+              onLogin?.();
+            }}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onGuestNotice?.("Sign in to save favorites and sync across devices."); onLogin?.(); } }}
+            tabIndex={0}
+            role="button"
+            title="Sign in to use favorites"
+          >
+            <span className="favorites-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              </svg>
+              Favorites
+            </span>
+            <span className="favorites-guest-badge">Sign in</span>
+          </div>
+        ) : (
           <div
             className={`sidebar-item favorites-item ${showFavorites ? "active" : ""}`}
             onClick={onToggleFavorites}
@@ -257,6 +293,7 @@ export default function Sidebar({
         />
       )}
       </div>
+      {panelFoot}
     </aside>
   );
 }
