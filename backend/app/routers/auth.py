@@ -3,8 +3,9 @@ import base64
 import logging
 from datetime import datetime, timezone, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.responses import HTMLResponse
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from jose import jwt, JWTError
@@ -189,6 +190,23 @@ def _verify_apple_identity_token(identity_token: str) -> dict:
         issuer=APPLE_ISSUER,
     )
     return payload
+
+
+@router.post("/apple/callback")
+async def apple_callback(request: Request):
+    """Apple redirects here with a form POST. We relay the data to the opener window."""
+    form = await request.form()
+    id_token = form.get("id_token", "")
+    user_raw = form.get("user", "")
+    origin = settings.webauthn_origin
+    return HTMLResponse(f"""<!DOCTYPE html><html><head><title>Signing in...</title></head>
+<body><p>Completing sign-in...</p><script>
+try {{
+  var data = {{ type:"apple-signin", idToken:"{id_token}", userData:{user_raw or "null"} }};
+  if (window.opener) {{ window.opener.postMessage(data,"{origin}"); window.close(); }}
+  else {{ window.location.href = "{origin}"; }}
+}} catch(e) {{ window.location.href = "{origin}"; }}
+</script></body></html>""")
 
 
 @router.post("/apple")
