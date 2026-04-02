@@ -98,18 +98,21 @@ export default function RadioGrid({
 
   if (error) {
     return (
-      <div className="empty-state">
+      <div className="empty-state empty-state--error" role="alert">
+        <div className="empty-state-icon" aria-hidden="true">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 20h.01" />
+            <path d="M8.5 16.429a5 5 0 0 1 7 0" />
+            <path d="M5 12.859a10 10 0 0 1 5.17-2.69" />
+            <path d="M19 12.859a10 10 0 0 0-2.007-1.523" />
+            <path d="M2 8.82a15 15 0 0 1 4.177-2.648" />
+            <path d="M22 8.82a15 15 0 0 0-11.288-3.764" />
+            <path d="m2 2 20 20" />
+          </svg>
+        </div>
         <h3>Connection Issue</h3>
         <p>{error}</p>
-        <button
-          onClick={onRetry}
-          style={{
-            marginTop: 16, padding: "10px 24px",
-            background: "var(--accent)", border: "none",
-            borderRadius: "var(--radius-sm)", color: "#fff",
-            cursor: "pointer", fontSize: 14, fontFamily: "inherit",
-          }}
-        >
+        <button type="button" className="btn-retry" onClick={onRetry}>
           Retry
         </button>
       </div>
@@ -198,7 +201,20 @@ export default function RadioGrid({
         )}
 
         {stations.length === 0 ? (
-          <div className="empty-state">
+          <div className={`empty-state ${showFavorites ? "empty-state--favorites" : "empty-state--empty"}`}>
+            <div className="empty-state-icon" aria-hidden="true">
+              {showFavorites ? (
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
+              ) : (
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.3-4.3" />
+                  <path d="M8 8l6 6M14 8l-6 6" />
+                </svg>
+              )}
+            </div>
             <h3>{showFavorites ? "No favorite stations yet" : "No stations found"}</h3>
             <p>
               {showFavorites

@@ -1,17 +1,29 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import FeedbackBar from "./FeedbackBar";
 
-export default function RadioPlayer({ station, onClose, isFavorite, onToggleFavorite, isGuest, onLogin, myVotes, voteSummary, onVote }) {
-  const audioRef = useRef(null);
+export default function RadioPlayer({
+  station,
+  onClose,
+  audioRef,
+  minimized = false,
+  isFavorite,
+  onToggleFavorite,
+  isGuest,
+  onLogin,
+  myVotes,
+  voteSummary,
+  onVote,
+}) {
   const [playing, setPlaying] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
   const streamUrl = station.url_resolved || station.url;
 
   useEffect(() => {
-    const audio = audioRef.current;
+    const audio = audioRef?.current;
     if (!audio || !streamUrl) return;
 
+    setErrorMsg("");
     audio.src = streamUrl;
     audio.play()
       .then(() => setPlaying(true))
@@ -21,18 +33,42 @@ export default function RadioPlayer({ station, onClose, isFavorite, onToggleFavo
       audio.pause();
       audio.src = "";
     };
-  }, [streamUrl]);
+  }, [streamUrl, audioRef]);
 
   useEffect(() => {
-    const handleKey = (e) => { if (e.key === "Escape") onClose(); };
+    if (minimized) return;
+    const handleKey = (e) => {
+      if (e.key === "Escape") onClose();
+    };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [onClose]);
+  }, [onClose, minimized]);
+
+  useEffect(() => {
+    const audio = audioRef?.current;
+    if (!audio) return;
+    const sync = () => setPlaying(!audio.paused);
+    sync();
+    audio.addEventListener("play", sync);
+    audio.addEventListener("pause", sync);
+    return () => {
+      audio.removeEventListener("play", sync);
+      audio.removeEventListener("pause", sync);
+    };
+  }, [audioRef, streamUrl]);
 
   const tags = station.tags ? station.tags.split(",").map((t) => t.trim()).filter(Boolean) : [];
 
+  const showAudioControls = !minimized && !errorMsg;
+
   return (
-    <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="radio-player-title">
+    <div
+      className={`modal-overlay${minimized ? " radio-modal-minimized" : ""}`}
+      role="dialog"
+      aria-modal={!minimized}
+      aria-hidden={minimized || undefined}
+      aria-labelledby={minimized ? undefined : "radio-player-title"}
+    >
       <div className="modal-content radio-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div>
@@ -89,9 +125,13 @@ export default function RadioPlayer({ station, onClose, isFavorite, onToggleFavo
 
           {errorMsg ? (
             <div className="no-stream">{errorMsg}</div>
-          ) : (
-            <audio ref={audioRef} controls style={{ width: "100%", marginTop: 16 }} />
-          )}
+          ) : null}
+          <audio
+            ref={audioRef}
+            controls={showAudioControls}
+            className={showAudioControls ? undefined : "radio-audio-hidden"}
+            style={showAudioControls ? { width: "100%", marginTop: 16 } : undefined}
+          />
 
           {tags.length > 0 && (
             <div className="radio-tags">

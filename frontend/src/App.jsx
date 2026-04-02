@@ -1,14 +1,23 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense, useRef } from "react";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import ChannelGrid from "./components/ChannelGrid";
 import RadioGrid from "./components/RadioGrid";
 import VideoPlayer from "./components/VideoPlayer";
 import RadioPlayer from "./components/RadioPlayer";
+import MiniPlayer from "./components/MiniPlayer";
 import FavoritesView from "./components/FavoritesView";
+import RecentlyPlayed from "./components/RecentlyPlayed";
 import useFavorites, { useRadioFavorites } from "./hooks/useFavorites";
+import useRecentlyPlayed from "./hooks/useRecentlyPlayed";
 import { useAuth } from "./hooks/useAuth";
 import { useVotes } from "./hooks/useVotes";
+import {
+  readUrlParams,
+  writeUrlParams,
+  pushPlayerState,
+  popPlayerState,
+} from "./hooks/useUrlState";
 
 const LandingPage = lazy(() => import("./components/LandingPage"));
 import { fetchChannels, fetchCategories, fetchCountries, fetchStats } from "./api/channels";
@@ -17,9 +26,39 @@ import { fetchRadioStations, fetchRadioTags, fetchRadioCountries } from "./api/r
 const GOOGLE_CLIENT_ID = "735750557405-01nak31482018qbfu1sigov94c1k4ca7.apps.googleusercontent.com";
 const APPLE_CLIENT_ID = "com.adajoon.web";
 
+function readInitialFromUrl() {
+  const u = readUrlParams();
+  let storedView = null;
+  try {
+    storedView = localStorage.getItem("adajoon_view");
+  } catch {
+    /* ignore */
+  }
+  const view = u.view || storedView || "grid";
+  const viewMode = ["grid", "list", "thumb"].includes(view) ? view : "grid";
+  return {
+    mode: u.mode,
+    viewMode,
+    search: u.mode === "tv" ? u.q : "",
+    radioSearch: u.mode === "radio" ? u.q : "",
+    activeCategories: u.cat,
+    activeTags: u.tag,
+    activeCountries: u.mode === "tv" ? u.country : [],
+    activeRadioCountries: u.mode === "radio" ? u.country : [],
+    activeQualities: u.mode === "tv" ? u.status : [],
+    activeRadioQualities: u.mode === "radio" ? u.status : [],
+    page: u.mode === "tv" ? u.page : 1,
+    radioPage: u.mode === "radio" ? u.page : 1,
+    showFavorites: u.fav,
+    showRadioFavorites: u.fav,
+  };
+}
+
+const IU = readInitialFromUrl();
+
 export default function App() {
-  const [mode, setMode] = useState("tv");
-  const [viewMode, setViewMode] = useState(() => localStorage.getItem("adajoon_view") || "grid");
+  const [mode, setMode] = useState(IU.mode);
+  const [viewMode, setViewMode] = useState(IU.viewMode);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showLogin, setShowLogin] = useState(() => {
     try { return !localStorage.getItem("adajoon_user") && !localStorage.getItem("adajoon_guest_skip"); } catch { return true; }
@@ -40,12 +79,12 @@ export default function App() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [search, setSearch] = useState("");
-  const [activeCategories, setActiveCategories] = useState([]);
-  const [activeCountries, setActiveCountries] = useState([]);
-  const [showFavorites, setShowFavorites] = useState(false);
-  const [activeQualities, setActiveQualities] = useState([]);
-  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState(IU.search);
+  const [activeCategories, setActiveCategories] = useState(IU.activeCategories);
+  const [activeCountries, setActiveCountries] = useState(IU.activeCountries);
+  const [showFavorites, setShowFavorites] = useState(IU.showFavorites);
+  const [activeQualities, setActiveQualities] = useState(IU.activeQualities);
+  const [page, setPage] = useState(IU.page);
   const [totalPages, setTotalPages] = useState(0);
   const [total, setTotal] = useState(0);
   const [selectedChannel, setSelectedChannel] = useState(null);
@@ -56,17 +95,79 @@ export default function App() {
   const [radioCountries, setRadioCountries] = useState([]);
   const [radioLoading, setRadioLoading] = useState(true);
   const [radioError, setRadioError] = useState(null);
-  const [radioSearch, setRadioSearch] = useState("");
-  const [activeTags, setActiveTags] = useState([]);
-  const [activeRadioCountries, setActiveRadioCountries] = useState([]);
-  const [activeRadioQualities, setActiveRadioQualities] = useState([]);
-  const [radioPage, setRadioPage] = useState(1);
+  const [radioSearch, setRadioSearch] = useState(IU.radioSearch);
+  const [activeTags, setActiveTags] = useState(IU.activeTags);
+  const [activeRadioCountries, setActiveRadioCountries] = useState(IU.activeRadioCountries);
+  const [activeRadioQualities, setActiveRadioQualities] = useState(IU.activeRadioQualities);
+  const [radioPage, setRadioPage] = useState(IU.radioPage);
   const [radioTotalPages, setRadioTotalPages] = useState(0);
   const [radioTotal, setRadioTotal] = useState(0);
   const [selectedStation, setSelectedStation] = useState(null);
-  const [showRadioFavorites, setShowRadioFavorites] = useState(false);
+  const [radioModalOpen, setRadioModalOpen] = useState(true);
+  const radioAudioRef = useRef(null);
+  const [showRadioFavorites, setShowRadioFavorites] = useState(IU.showRadioFavorites);
+
+  const nowPlaying =
+    selectedStation == null
+      ? null
+      : { type: "radio", station: selectedStation, modalOpen: radioModalOpen };
+
+  const [debouncedTvSearch, setDebouncedTvSearch] = useState(IU.search);
+  const [debouncedRadioSearch, setDebouncedRadioSearch] = useState(IU.radioSearch);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedTvSearch(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedRadioSearch(radioSearch), 300);
+    return () => clearTimeout(t);
+  }, [radioSearch]);
+
+  useEffect(() => {
+    writeUrlParams({
+      mode,
+      q: mode === "tv" ? debouncedTvSearch : debouncedRadioSearch,
+      cat: activeCategories,
+      country: mode === "tv" ? activeCountries : activeRadioCountries,
+      tag: activeTags,
+      status: mode === "tv" ? activeQualities : activeRadioQualities,
+      page: mode === "tv" ? page : radioPage,
+      view: viewMode,
+      fav: showFavorites,
+    });
+  }, [
+    mode,
+    debouncedTvSearch,
+    debouncedRadioSearch,
+    activeCategories,
+    activeCountries,
+    activeTags,
+    activeRadioCountries,
+    activeQualities,
+    activeRadioQualities,
+    page,
+    radioPage,
+    viewMode,
+    showFavorites,
+  ]);
+
+  useEffect(() => {
+    const onPop = () => {
+      setSelectedChannel(null);
+      setSelectedStation(null);
+      setRadioModalOpen(true);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  const prevTvFiltersKey = useRef(null);
+  const prevRadioFiltersKey = useRef(null);
 
   const { favorites, favoritesList, favoritesCount, toggleFavorite, isFavorite, loadFromServer } = useFavorites();
+  const { addRecent, recentItems } = useRecentlyPlayed();
   const {
     favorites: radioFavorites,
     favoritesList: radioFavoritesList,
@@ -77,6 +178,14 @@ export default function App() {
   } = useRadioFavorites();
 
   const votes = useVotes();
+
+  useEffect(() => {
+    if (selectedChannel) addRecent("tv", selectedChannel);
+  }, [selectedChannel, addRecent]);
+
+  useEffect(() => {
+    if (selectedStation) addRecent("radio", selectedStation);
+  }, [selectedStation, addRecent]);
 
   useEffect(() => {
     if (auth.user) {
@@ -217,7 +326,24 @@ export default function App() {
   }, [loadMeta]);
 
   useEffect(() => { loadChannels(); }, [loadChannels]);
-  useEffect(() => { setPage(1); }, [search, activeCategories, activeCountries, showFavorites, activeQualities]);
+
+  useEffect(() => {
+    const key = JSON.stringify({
+      search,
+      activeCategories,
+      activeCountries,
+      showFavorites,
+      activeQualities,
+    });
+    if (prevTvFiltersKey.current === null) {
+      prevTvFiltersKey.current = key;
+      return;
+    }
+    if (prevTvFiltersKey.current !== key) {
+      prevTvFiltersKey.current = key;
+      setPage(1);
+    }
+  }, [search, activeCategories, activeCountries, showFavorites, activeQualities]);
 
   useEffect(() => {
     if (mode === "radio") loadRadioMeta();
@@ -227,7 +353,23 @@ export default function App() {
     if (mode === "radio") loadRadio();
   }, [mode, loadRadio]);
 
-  useEffect(() => { setRadioPage(1); }, [radioSearch, activeTags, activeRadioCountries, activeRadioQualities, showRadioFavorites]);
+  useEffect(() => {
+    const key = JSON.stringify({
+      radioSearch,
+      activeTags,
+      activeRadioCountries,
+      activeRadioQualities,
+      showRadioFavorites,
+    });
+    if (prevRadioFiltersKey.current === null) {
+      prevRadioFiltersKey.current = key;
+      return;
+    }
+    if (prevRadioFiltersKey.current !== key) {
+      prevRadioFiltersKey.current = key;
+      setRadioPage(1);
+    }
+  }, [radioSearch, activeTags, activeRadioCountries, activeRadioQualities, showRadioFavorites]);
 
   const displayedChannels = showFavorites ? favoritesList : channels;
   const displayedTotal = showFavorites ? favoritesCount : total;
@@ -290,11 +432,69 @@ export default function App() {
     setActiveRadioQualities((prev) => prev.includes(val) ? prev.filter((q) => q !== val) : [...prev, val]);
   }, []);
 
-  const handleModeSwitch = (newMode) => {
-    setMode(newMode);
-    setSelectedChannel(null);
+  const openTvPlayer = useCallback((ch) => {
+    if (!ch) return;
+    pushPlayerState("tv", ch.id);
     setSelectedStation(null);
+    setSelectedChannel(ch);
+  }, []);
+
+  const closeTvPlayer = useCallback(() => {
+    setSelectedChannel(null);
+    popPlayerState();
+  }, []);
+
+  const stopRadio = useCallback(() => {
+    const a = radioAudioRef.current;
+    if (a) {
+      a.pause();
+      a.removeAttribute("src");
+      a.load();
+    }
+    setSelectedStation(null);
+    setRadioModalOpen(true);
+    popPlayerState();
+  }, []);
+
+  const handleSelectStation = useCallback((station) => {
+    if (!station) return;
+    pushPlayerState("radio", station.id);
+    setSelectedChannel(null);
+    setSelectedStation(station);
+    setRadioModalOpen(true);
+  }, []);
+
+  const handleModeSwitch = (newMode) => {
+    if (selectedChannel || selectedStation) {
+      setSelectedChannel(null);
+      setSelectedStation(null);
+      setRadioModalOpen(true);
+      popPlayerState();
+    }
+    setMode(newMode);
   };
+
+  const handleRecentSelect = useCallback(
+    (item) => {
+      if (item.type === "tv") {
+        const ch =
+          channels.find((c) => c.id === item.id) ||
+          favorites[item.id] ||
+          { id: item.id, name: item.name, logo: item.logo };
+        openTvPlayer(ch);
+      } else {
+        const st =
+          radioStations.find((s) => s.id === item.id) ||
+          radioFavorites[item.id] ||
+          { id: item.id, name: item.name, favicon: item.logo };
+        handleSelectStation(st);
+      }
+    },
+    [channels, radioStations, favorites, radioFavorites, openTvPlayer, handleSelectStation]
+  );
+
+  const searching = mode === "tv" ? Boolean(search.trim()) : Boolean(radioSearch.trim());
+  const showRecentRow = !showFavorites && !searching;
 
   return (
     <>
@@ -356,13 +556,16 @@ export default function App() {
           isGuest={isGuest}
           onLogin={() => setShowLogin(true)}
         />
-        <main className="main-content">
+        <main className={`main-content${nowPlaying && !nowPlaying.modalOpen ? " main-content--mini-player" : ""}`}>
+          {showRecentRow && (
+            <RecentlyPlayed recentItems={recentItems} onSelect={handleRecentSelect} />
+          )}
           {showFavorites ? (
             <FavoritesView
               tvFavorites={favoritesList}
               radioFavorites={radioFavoritesList}
-              onSelectChannel={setSelectedChannel}
-              onSelectStation={setSelectedStation}
+              onSelectChannel={openTvPlayer}
+              onSelectStation={handleSelectStation}
               isTvFavorite={isFavorite}
               isRadioFavorite={isRadioFavorite}
               onToggleTvFavorite={toggleFavorite}
@@ -378,7 +581,7 @@ export default function App() {
               page={page}
               totalPages={totalPages}
               onPageChange={setPage}
-              onSelect={setSelectedChannel}
+              onSelect={openTvPlayer}
               activeCategories={activeCategories}
               activeCountries={activeCountries}
               categoryList={categories}
@@ -406,7 +609,7 @@ export default function App() {
               page={radioPage}
               totalPages={radioTotalPages}
               onPageChange={setRadioPage}
-              onSelect={setSelectedStation}
+              onSelect={handleSelectStation}
               activeTags={activeTags}
               activeCountries={activeRadioCountries}
               search={radioSearch}
@@ -430,7 +633,7 @@ export default function App() {
       {selectedChannel && (
         <VideoPlayer
           channel={selectedChannel}
-          onClose={() => setSelectedChannel(null)}
+          onClose={closeTvPlayer}
           isFavorite={isFavorite(selectedChannel.id)}
           onToggleFavorite={() => toggleFavorite(selectedChannel)}
           isGuest={isGuest}
@@ -443,7 +646,9 @@ export default function App() {
       {selectedStation && (
         <RadioPlayer
           station={selectedStation}
-          onClose={() => setSelectedStation(null)}
+          audioRef={radioAudioRef}
+          minimized={!radioModalOpen}
+          onClose={() => setRadioModalOpen(false)}
           isFavorite={isRadioFavorite(selectedStation.id)}
           onToggleFavorite={() => toggleRadioFavorite(selectedStation)}
           isGuest={isGuest}
@@ -451,6 +656,14 @@ export default function App() {
           myVotes={votes.getMyVotesFor("radio", selectedStation.id)}
           voteSummary={votes.getSummaryFor("radio", selectedStation.id)}
           onVote={votes.submitVote}
+        />
+      )}
+      {nowPlaying && !nowPlaying.modalOpen && (
+        <MiniPlayer
+          station={nowPlaying.station}
+          audioRef={radioAudioRef}
+          onExpand={() => setRadioModalOpen(true)}
+          onStop={stopRadio}
         />
       )}
       {showLogin && !auth.user && (
