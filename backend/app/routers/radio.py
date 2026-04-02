@@ -22,6 +22,7 @@ async def list_radio_stations(
     country: str | None = Query(None),
     language: str | None = Query(None),
     working_only: bool = Query(False),
+    status: str | None = Query(None, description="Filter by health status: verified, live, or hide_offline"),
     page: int = Query(1, ge=1),
     per_page: int = Query(40, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
@@ -29,7 +30,7 @@ async def list_radio_stations(
     params = RadioSearchParams(
         query=query, tag=tag, country=country,
         language=language, working_only=working_only,
-        page=page, per_page=per_page,
+        status=status, page=page, per_page=per_page,
     )
     stations, total = await search_radio(db, params)
     return PaginatedRadio(

@@ -70,6 +70,7 @@ class ChannelSearchParams(BaseModel):
     country: Optional[str] = None
     language: Optional[str] = None
     live_only: bool = False
+    status: Optional[str] = None
     page: int = 1
     per_page: int = 40
 
@@ -110,6 +111,7 @@ class RadioSearchParams(BaseModel):
     country: Optional[str] = None
     language: Optional[str] = None
     working_only: bool = False
+    status: Optional[str] = None
     page: int = 1
     per_page: int = 40
 

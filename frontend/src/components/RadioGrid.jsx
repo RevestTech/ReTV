@@ -36,6 +36,13 @@ function getRadioStreamStatus(station) {
   };
 }
 
+const RADIO_STATUS_OPTIONS = [
+  { value: null, label: "All" },
+  { value: "verified", label: "Verified", dot: "verified" },
+  { value: "live", label: "Live", dot: "online" },
+  { value: "hide_offline", label: "Hide Dead", dot: "offline" },
+];
+
 export default function RadioGrid({
   stations,
   loading,
@@ -50,6 +57,8 @@ export default function RadioGrid({
   search,
   showFavorites,
   workingOnly,
+  statusFilter,
+  onStatusFilter,
   onClearFilter,
   onRetry,
   isFavorite,
@@ -59,7 +68,7 @@ export default function RadioGrid({
   isGuest,
   onLogin,
 }) {
-  const hasFilters = activeTag || activeCountry || search || showFavorites || workingOnly;
+  const hasFilters = activeTag || activeCountry || search || showFavorites || workingOnly || statusFilter;
 
   if (loading) {
     return (
@@ -109,7 +118,21 @@ export default function RadioGrid({
             {total.toLocaleString()} {showFavorites ? "saved" : ""} station{total !== 1 ? "s" : ""}{!showFavorites ? " found" : ""}
           </span>
         </div>
-        <ViewToggle viewMode={viewMode} onViewToggle={onViewToggle} />
+        <div className="content-toolbar">
+          <div className="quality-filter">
+            {RADIO_STATUS_OPTIONS.map((opt) => (
+              <button
+                key={opt.label}
+                className={`quality-btn ${statusFilter === opt.value ? "active" : ""}`}
+                onClick={() => onStatusFilter(opt.value)}
+              >
+                {opt.dot && <span className={`status-dot ${opt.dot}`} />}
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <ViewToggle viewMode={viewMode} onViewToggle={onViewToggle} />
+        </div>
       </div>
 
       {hasFilters && (
@@ -122,6 +145,11 @@ export default function RadioGrid({
           {workingOnly && (
             <span className="filter-tag" onClick={() => onClearFilter("workingOnly")}>
               Working only ✕
+            </span>
+          )}
+          {statusFilter && (
+            <span className="filter-tag" onClick={() => onClearFilter("status")}>
+              Quality: {RADIO_STATUS_OPTIONS.find((o) => o.value === statusFilter)?.label} ✕
             </span>
           )}
           {search && (

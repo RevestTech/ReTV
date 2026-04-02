@@ -123,6 +123,19 @@ async def search_radio(db: AsyncSession, params: RadioSearchParams):
         query = query.where(RadioStation.last_check_ok == True)
         count_query = count_query.where(RadioStation.last_check_ok == True)
 
+    if params.status == "verified":
+        cond = RadioStation.health_status == "verified"
+        query = query.where(cond)
+        count_query = count_query.where(cond)
+    elif params.status == "live":
+        cond = RadioStation.health_status.in_(("verified", "online")) | (RadioStation.last_check_ok == True)
+        query = query.where(cond)
+        count_query = count_query.where(cond)
+    elif params.status == "hide_offline":
+        cond = ~RadioStation.health_status.in_(("offline", "error", "timeout", "geo_blocked"))
+        query = query.where(cond)
+        count_query = count_query.where(cond)
+
     total = (await db.execute(count_query)).scalar() or 0
 
     offset = (params.page - 1) * params.per_page

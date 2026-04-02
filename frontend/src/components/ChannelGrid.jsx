@@ -61,6 +61,13 @@ function getTvStreamStatus(healthStatus) {
   };
 }
 
+const STATUS_OPTIONS = [
+  { value: null, label: "All" },
+  { value: "verified", label: "Verified", dot: "verified" },
+  { value: "live", label: "Live", dot: "online" },
+  { value: "hide_offline", label: "Hide Dead", dot: "offline" },
+];
+
 export default function ChannelGrid({
   channels,
   loading,
@@ -75,6 +82,8 @@ export default function ChannelGrid({
   search,
   showFavorites,
   liveOnly,
+  statusFilter,
+  onStatusFilter,
   onClearFilter,
   onRetry,
   isFavorite,
@@ -84,7 +93,7 @@ export default function ChannelGrid({
   isGuest,
   onLogin,
 }) {
-  const hasFilters = activeCategory || activeCountry || search || showFavorites || liveOnly;
+  const hasFilters = activeCategory || activeCountry || search || showFavorites || liveOnly || statusFilter;
 
   if (loading) {
     return (
@@ -132,7 +141,21 @@ export default function ChannelGrid({
             {total.toLocaleString()} {showFavorites ? "saved" : ""} channel{total !== 1 ? "s" : ""}{!showFavorites ? " found" : ""}
           </span>
         </div>
-        <ViewToggle viewMode={viewMode} onViewToggle={onViewToggle} />
+        <div className="content-toolbar">
+          <div className="quality-filter">
+            {STATUS_OPTIONS.map((opt) => (
+              <button
+                key={opt.label}
+                className={`quality-btn ${statusFilter === opt.value ? "active" : ""}`}
+                onClick={() => onStatusFilter(opt.value)}
+              >
+                {opt.dot && <span className={`status-dot ${opt.dot}`} />}
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <ViewToggle viewMode={viewMode} onViewToggle={onViewToggle} />
+        </div>
       </div>
 
       {hasFilters && (
@@ -145,6 +168,11 @@ export default function ChannelGrid({
           {liveOnly && (
             <span className="filter-tag" onClick={() => onClearFilter("liveOnly")}>
               Live only ✕
+            </span>
+          )}
+          {statusFilter && (
+            <span className="filter-tag" onClick={() => onClearFilter("status")}>
+              Quality: {STATUS_OPTIONS.find((o) => o.value === statusFilter)?.label} ✕
             </span>
           )}
           {search && (

@@ -43,6 +43,7 @@ export default function App() {
   const [activeCountry, setActiveCountry] = useState(null);
   const [showFavorites, setShowFavorites] = useState(false);
   const [liveOnly, setLiveOnly] = useState(false);
+  const [statusFilter, setStatusFilter] = useState(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [total, setTotal] = useState(0);
@@ -58,6 +59,7 @@ export default function App() {
   const [activeTag, setActiveTag] = useState(null);
   const [activeRadioCountry, setActiveRadioCountry] = useState(null);
   const [workingOnly, setWorkingOnly] = useState(false);
+  const [radioStatusFilter, setRadioStatusFilter] = useState(null);
   const [radioPage, setRadioPage] = useState(1);
   const [radioTotalPages, setRadioTotalPages] = useState(0);
   const [radioTotal, setRadioTotal] = useState(0);
@@ -139,6 +141,7 @@ export default function App() {
         category: activeCategory || undefined,
         country: activeCountry || undefined,
         liveOnly: liveOnly || undefined,
+        status: statusFilter || undefined,
         page,
       });
       setChannels(data.channels);
@@ -149,7 +152,7 @@ export default function App() {
     } finally {
       setLoading(false);
     }
-  }, [search, activeCategory, activeCountry, liveOnly, page, showFavorites]);
+  }, [search, activeCategory, activeCountry, liveOnly, statusFilter, page, showFavorites]);
 
   // Radio: load metadata
   const loadRadioMeta = useCallback(async () => {
@@ -173,6 +176,7 @@ export default function App() {
         tag: activeTag || undefined,
         country: activeRadioCountry || undefined,
         workingOnly: workingOnly || undefined,
+        status: radioStatusFilter || undefined,
         page: radioPage,
       });
       setRadioStations(data.stations);
@@ -183,7 +187,7 @@ export default function App() {
     } finally {
       setRadioLoading(false);
     }
-  }, [radioSearch, activeTag, activeRadioCountry, workingOnly, radioPage, showRadioFavorites]);
+  }, [radioSearch, activeTag, activeRadioCountry, workingOnly, radioStatusFilter, radioPage, showRadioFavorites]);
 
   useEffect(() => {
     loadMeta();
@@ -192,13 +196,13 @@ export default function App() {
   }, [loadMeta]);
 
   useEffect(() => { loadChannels(); }, [loadChannels]);
-  useEffect(() => { setPage(1); }, [search, activeCategory, activeCountry, showFavorites, liveOnly]);
+  useEffect(() => { setPage(1); }, [search, activeCategory, activeCountry, showFavorites, liveOnly, statusFilter]);
 
   useEffect(() => {
     if (mode === "radio") { loadRadioMeta(); loadRadio(); }
   }, [mode, loadRadioMeta, loadRadio]);
 
-  useEffect(() => { setRadioPage(1); }, [radioSearch, activeTag, activeRadioCountry, workingOnly, showRadioFavorites]);
+  useEffect(() => { setRadioPage(1); }, [radioSearch, activeTag, activeRadioCountry, workingOnly, radioStatusFilter, showRadioFavorites]);
 
   const displayedChannels = showFavorites ? favoritesList : channels;
   const displayedTotal = showFavorites ? favoritesCount : total;
@@ -216,6 +220,7 @@ export default function App() {
     if (type === "liveOnly") setLiveOnly(false);
     if (type === "tag") setActiveTag(null);
     if (type === "workingOnly") setWorkingOnly(false);
+    if (type === "status") { setStatusFilter(null); setRadioStatusFilter(null); }
   };
 
   const handleToggleFavorites = () => {
@@ -308,6 +313,8 @@ export default function App() {
               search={search}
               showFavorites={false}
               liveOnly={liveOnly}
+              statusFilter={statusFilter}
+              onStatusFilter={setStatusFilter}
               onClearFilter={clearFilter}
               onRetry={loadChannels}
               isFavorite={isFavorite}
@@ -332,6 +339,8 @@ export default function App() {
               search={radioSearch}
               showFavorites={false}
               workingOnly={workingOnly}
+              statusFilter={radioStatusFilter}
+              onStatusFilter={setRadioStatusFilter}
               onClearFilter={clearFilter}
               onRetry={loadRadio}
               isFavorite={isRadioFavorite}

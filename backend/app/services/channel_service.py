@@ -35,6 +35,19 @@ async def search_channels(db: AsyncSession, params: ChannelSearchParams):
         query = query.where(Channel.stream_url != "")
         count_query = count_query.where(Channel.stream_url != "")
 
+    if params.status == "verified":
+        cond = Channel.health_status == "verified"
+        query = query.where(cond)
+        count_query = count_query.where(cond)
+    elif params.status == "live":
+        cond = Channel.health_status.in_(("verified", "online", "manifest_only"))
+        query = query.where(cond)
+        count_query = count_query.where(cond)
+    elif params.status == "hide_offline":
+        cond = ~Channel.health_status.in_(("offline", "error", "timeout", "geo_blocked"))
+        query = query.where(cond)
+        count_query = count_query.where(cond)
+
     total = (await db.execute(count_query)).scalar() or 0
 
     offset = (params.page - 1) * params.per_page
