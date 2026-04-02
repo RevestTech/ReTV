@@ -3129,8 +3129,9 @@ body {
 }
 
 .feedback-icon {
-  font-size: 14px;
-  line-height: 1;
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
 }
 
 .feedback-btn-label {
