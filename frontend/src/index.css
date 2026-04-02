@@ -454,9 +454,15 @@ body {
 
 .content-header {
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.content-title-row {
+  display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
 }
 
 .content-title {
@@ -1708,8 +1714,10 @@ body {
     height: calc(100dvh - 100px - 32px);
   }
 
-  .content-header { flex-wrap: wrap; gap: 10px; }
+  .content-header { gap: 8px; margin-bottom: 10px; }
+  .content-title-row { flex-wrap: wrap; gap: 6px; }
   .content-title { font-size: 18px !important; }
+  .content-stats { display: none; }
   .content-toolbar { flex-wrap: wrap; gap: 8px; width: 100%; }
   .quality-filter { flex: 1; overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .quality-btn { padding: 5px 8px; font-size: 11px; }

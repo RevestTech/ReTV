@@ -113,13 +113,13 @@ export default function RadioGrid({
   return (
     <>
       <div className="content-header">
-        <div>
-          <h2 className="content-title">{title}</h2>
-          <span className="content-subtitle">
-            {total.toLocaleString()} {showFavorites ? "saved" : ""} station{total !== 1 ? "s" : ""}{!showFavorites ? " found" : ""}
-          </span>
-        </div>
-        <div className="content-toolbar">
+        <div className="content-title-row">
+          <div>
+            <h2 className="content-title">{title}</h2>
+            <span className="content-subtitle">
+              {total.toLocaleString()} {showFavorites ? "saved" : ""} station{total !== 1 ? "s" : ""}{!showFavorites ? " found" : ""}
+            </span>
+          </div>
           {stats && (
             <div className="content-stats">
               <span className="stat-pill">{stats.total_channels?.toLocaleString()} <small>channels</small></span>
@@ -127,6 +127,8 @@ export default function RadioGrid({
               <span className="stat-pill">{stats.total_countries?.toLocaleString()} <small>countries</small></span>
             </div>
           )}
+        </div>
+        <div className="content-toolbar">
           <div className="quality-filter">
             {QUALITY_OPTIONS.map((opt) => {
               const val = opt.key === "hide_dead" ? "hide_offline" : opt.key;
