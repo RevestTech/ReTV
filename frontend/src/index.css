@@ -20,11 +20,16 @@
   box-sizing: border-box;
 }
 
+html, body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 body {
   font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--bg-primary);
   color: var(--text-primary);
-  min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -32,6 +37,7 @@ body {
   display: flex;
   flex-direction: column;
   height: 100dvh;
+  height: -webkit-fill-available;
   overflow: hidden;
 }
 
@@ -425,7 +431,7 @@ body {
 /* Footer */
 .app-footer {
   flex-shrink: 0;
-  height: 28px;
+  min-height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -435,7 +441,7 @@ body {
   font-size: 11px;
   color: var(--text-muted);
   z-index: 99;
-  padding: 0 16px;
+  padding: 4px 16px calc(4px + env(safe-area-inset-bottom, 0px));
 }
 
 .footer-version {
@@ -467,6 +473,8 @@ body {
   overflow-y: auto;
   min-height: 0;
   padding-bottom: 24px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 .content-title-row {
