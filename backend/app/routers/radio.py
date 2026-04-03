@@ -71,6 +71,12 @@ STATIC_TAGS = [
     {"name": "variety", "station_count": 600},
 ]
 
+@router.get("/tags-test")
+async def tags_test():
+    """Test endpoint to verify Railway deployment."""
+    return [{"name": "test", "station_count": 1}]
+
+
 @router.get("/tags")
 async def list_radio_tags():
     """
