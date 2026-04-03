@@ -1,6 +1,7 @@
+import logging
 import math
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -13,6 +14,7 @@ from app.services.radio_service import (
 )
 from app.redis_client import cache_get, cache_set
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/radio", tags=["radio"])
 
 CACHE_TTL = 300  # 5 minutes
@@ -47,23 +49,33 @@ async def list_radio_stations(
 
 @router.get("/tags", response_model=list[RadioTagOut])
 async def list_radio_tags(db: AsyncSession = Depends(get_db)):
-    cached = await cache_get("radio_tags")
-    if cached is not None:
-        return cached
-    data = await get_radio_tags(db)
-    await cache_set("radio_tags", [{"name": d.name, "station_count": d.station_count} for d in data], CACHE_TTL)
-    return data
+    try:
+        cached = await cache_get("radio_tags")
+        if cached is not None:
+            return cached
+        data = await get_radio_tags(db)
+        # data is already a list of dicts from the service
+        await cache_set("radio_tags", data, CACHE_TTL)
+        return data
+    except Exception as e:
+        logger.error(f"Error in list_radio_tags: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to fetch radio tags: {str(e)}")
 
 
 @router.get("/countries", response_model=list[RadioCountryOut])
 async def list_radio_countries(db: AsyncSession = Depends(get_db)):
-    cached = await cache_get("radio_countries")
-    if cached is not None:
-        return cached
-    rows = await get_radio_countries(db)
-    data = [
-        RadioCountryOut(country=r.country, country_code=r.country_code, station_count=r.station_count)
-        for r in rows
-    ]
-    await cache_set("radio_countries", [{"country": d.country, "country_code": d.country_code, "station_count": d.station_count} for d in data], CACHE_TTL)
-    return data
+    try:
+        cached = await cache_get("radio_countries")
+        if cached is not None:
+            return cached
+        rows = await get_radio_countries(db)
+        data = [
+            RadioCountryOut(country=r.country, country_code=r.country_code, station_count=r.station_count)
+            for r in rows
+        ]
+        # Convert Pydantic models to dicts for caching
+        await cache_set("radio_countries", [d.model_dump() for d in data], CACHE_TTL)
+        return data
+    except Exception as e:
+        logger.error(f"Error in list_radio_countries: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to fetch radio countries: {str(e)}")
