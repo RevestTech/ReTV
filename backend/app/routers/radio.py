@@ -48,35 +48,36 @@ async def list_radio_stations(
     )
 
 
+STATIC_TAGS = [
+    {"name": "music", "station_count": 5000},
+    {"name": "pop", "station_count": 3500},
+    {"name": "news", "station_count": 2800},
+    {"name": "rock", "station_count": 2500},
+    {"name": "talk", "station_count": 2200},
+    {"name": "jazz", "station_count": 1800},
+    {"name": "classical", "station_count": 1500},
+    {"name": "electronic", "station_count": 1400},
+    {"name": "dance", "station_count": 1300},
+    {"name": "country", "station_count": 1200},
+    {"name": "hip hop", "station_count": 1100},
+    {"name": "sports", "station_count": 1000},
+    {"name": "oldies", "station_count": 950},
+    {"name": "80s", "station_count": 900},
+    {"name": "90s", "station_count": 850},
+    {"name": "christian", "station_count": 800},
+    {"name": "alternative", "station_count": 750},
+    {"name": "latin", "station_count": 700},
+    {"name": "blues", "station_count": 650},
+    {"name": "variety", "station_count": 600},
+]
+
 @router.get("/tags")
-async def list_radio_tags():
+def list_radio_tags():
     """
     Get popular radio tags/genres.
     Returns a static curated list for performance.
     """
-    # Ultra simple: Just return plain dicts, let FastAPI handle it
-    return [
-        {"name": "music", "station_count": 5000},
-        {"name": "pop", "station_count": 3500},
-        {"name": "news", "station_count": 2800},
-        {"name": "rock", "station_count": 2500},
-        {"name": "talk", "station_count": 2200},
-        {"name": "jazz", "station_count": 1800},
-        {"name": "classical", "station_count": 1500},
-        {"name": "electronic", "station_count": 1400},
-        {"name": "dance", "station_count": 1300},
-        {"name": "country", "station_count": 1200},
-        {"name": "hip hop", "station_count": 1100},
-        {"name": "sports", "station_count": 1000},
-        {"name": "oldies", "station_count": 950},
-        {"name": "80s", "station_count": 900},
-        {"name": "90s", "station_count": 850},
-        {"name": "christian", "station_count": 800},
-        {"name": "alternative", "station_count": 750},
-        {"name": "latin", "station_count": 700},
-        {"name": "blues", "station_count": 650},
-        {"name": "variety", "station_count": 600},
-    ]
+    return STATIC_TAGS
 
 
 @router.get("/countries", response_model=list[RadioCountryOut])
