@@ -257,26 +257,27 @@ async def _verify_apple_identity_token(identity_token: str) -> dict:
 @router.post("/apple/callback")
 async def apple_callback(request: Request, response: Response):
     """Apple redirects here with a form POST. We relay the data to the opener window."""
-    form = await request.form()
-    id_token = form.get("id_token", "")
-    user_raw = form.get("user", "")
-    origin = settings.webauthn_origin
-    
-    # Safely encode data for JavaScript embedding (XSS prevention)
-    safe_id_token = json.dumps(id_token)
-    safe_user_data = "null"
-    if user_raw:
-        try:
-            # Validate and re-serialize to ensure proper escaping
-            parsed = json.loads(user_raw)
-            safe_user_data = json.dumps(parsed)
-        except (json.JSONDecodeError, ValueError):
-            safe_user_data = "null"
-    safe_origin = json.dumps(origin)
-    
-    # No COOP header — defaults to unsafe-none, allowing popup postMessage back to opener
-    
-    html_content = f"""<!DOCTYPE html><html><head><title>Signing in...</title></head>
+    try:
+        form = await request.form()
+        id_token = form.get("id_token", "")
+        user_raw = form.get("user", "")
+        origin = settings.webauthn_origin
+        
+        # Safely encode data for JavaScript embedding (XSS prevention)
+        safe_id_token = json.dumps(id_token)
+        safe_user_data = "null"
+        if user_raw:
+            try:
+                # Validate and re-serialize to ensure proper escaping
+                parsed = json.loads(user_raw)
+                safe_user_data = json.dumps(parsed)
+            except (json.JSONDecodeError, ValueError):
+                safe_user_data = "null"
+        safe_origin = json.dumps(origin)
+        
+        # No COOP header — defaults to unsafe-none, allowing popup postMessage back to opener
+        
+        html_content = f"""<!DOCTYPE html><html><head><title>Signing in...</title></head>
 <body><p>Completing sign-in...</p><script>
 try {{
   var data = {{ type:"apple-signin", idToken:{safe_id_token}, userData:{safe_user_data} }};
@@ -284,8 +285,11 @@ try {{
   else {{ window.location.href = {safe_origin}; }}
 }} catch(e) {{ window.location.href = {safe_origin}; }}
 </script></body></html>"""
-    
-    return HTMLResponse(content=html_content, headers=dict(response.headers))
+        
+        return HTMLResponse(content=html_content)
+    except Exception as e:
+        logger.error(f"Apple callback error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Apple callback failed: {str(e)}")
 
 
 @router.post("/apple")
