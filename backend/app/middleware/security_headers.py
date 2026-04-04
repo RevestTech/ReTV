@@ -11,10 +11,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         response: Response = await call_next(request)
         
-        # COOP - Allow popups (Google/Apple OAuth) to postMessage back to opener
-        # same-origin-allow-popups lets our page open OAuth popups that can communicate back
-        # unsafe-none on COEP avoids requiring CORP headers on all subresources
-        response.headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
+        # COEP - unsafe-none avoids requiring CORP headers on all subresources
+        # Note: COOP header intentionally omitted — Google's accounts.google.com
+        # sets its own COOP which creates an unavoidable cross-origin mismatch.
+        # FedCM (use_fedcm_for_prompt) in the frontend handles OAuth without popups.
         response.headers["Cross-Origin-Embedder-Policy"] = "unsafe-none"
         
         # Prevent MIME type sniffing

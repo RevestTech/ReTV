@@ -6,10 +6,5 @@ restartPolicyType = "always"
 
 [[deploy.headers]]
 path = "/*"
-key = "Cross-Origin-Opener-Policy"
-value = "same-origin-allow-popups"
-
-[[deploy.headers]]
-path = "/*"
 key = "Cross-Origin-Embedder-Policy"
 value = "unsafe-none"

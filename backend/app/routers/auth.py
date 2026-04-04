@@ -274,8 +274,7 @@ async def apple_callback(request: Request, response: Response):
             safe_user_data = "null"
     safe_origin = json.dumps(origin)
     
-    # Set COOP header to allow popup communication
-    response.headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
+    # No COOP header — defaults to unsafe-none, allowing popup postMessage back to opener
     
     html_content = f"""<!DOCTYPE html><html><head><title>Signing in...</title></head>
 <body><p>Completing sign-in...</p><script>

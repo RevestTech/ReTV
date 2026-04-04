@@ -30,6 +30,7 @@ export default function LandingPage({
       window.google.accounts.id.initialize({
         client_id: googleClientId,
         callback: (response) => callbackRef.current(response.credential),
+        use_fedcm_for_prompt: true,
       });
       gsiInitialized = true;
     }
