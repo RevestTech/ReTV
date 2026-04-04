@@ -237,17 +237,18 @@ FRONTEND_URL = os.getenv("FRONTEND_URL", "https://frontend-production-d863.up.ra
 http_client = httpx.AsyncClient(timeout=30.0, follow_redirects=True)
 
 
-@app.get("/{full_path:path}")
+@app.api_route("/{full_path:path}", methods=["GET", "HEAD"])
 async def proxy_to_frontend(request: Request, full_path: str):
     """
     Catch-all route to proxy non-API requests to frontend.
     This allows backend to serve as the main entry point with proper security headers,
     while frontend handles the actual SPA rendering.
+    
+    Only handles GET and HEAD to avoid conflicts with API POST/PUT/DELETE routes.
     """
     # Prevent API paths from being proxied to frontend (avoids loops/502s)
-    # Check for both with and without leading slash
-    if full_path.startswith("api/") or full_path.startswith("/api/") or full_path == "api":
-        raise HTTPException(status_code=404, detail="API endpoint not found")
+    if full_path.startswith("api"):
+        raise HTTPException(status_code=404, detail="Not found")
 
     # Build the full URL to frontend
     url = f"{FRONTEND_URL}/{full_path}"
