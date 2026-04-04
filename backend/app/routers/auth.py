@@ -76,6 +76,9 @@ def decode_challenge_token(token: str) -> bytes:
 
 def _set_auth_cookies(response: Response, user: User, token: str) -> None:
     """Set authentication cookies (httpOnly JWT + CSRF token)."""
+    # Determine cookie domain - use adajoon.com for both www and non-www
+    cookie_domain = ".adajoon.com" if settings.env == "production" else None
+    
     # Set JWT in httpOnly cookie (XSS-safe)
     response.set_cookie(
         key="auth_token",
@@ -85,6 +88,7 @@ def _set_auth_cookies(response: Response, user: User, token: str) -> None:
         samesite="lax",
         max_age=settings.jwt_expiry_days * 24 * 60 * 60,
         path="/",
+        domain=cookie_domain,
     )
     
     # Set CSRF token in readable cookie for frontend
@@ -97,6 +101,7 @@ def _set_auth_cookies(response: Response, user: User, token: str) -> None:
         samesite="lax",
         max_age=3600,  # 1 hour
         path="/",
+        domain=cookie_domain,
     )
 
 
