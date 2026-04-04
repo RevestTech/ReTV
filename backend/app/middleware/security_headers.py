@@ -11,8 +11,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         response: Response = await call_next(request)
         
-        # COOP/COEP - Allow OAuth popups while maintaining security
-        response.headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
+        # COOP/COEP - Must be permissive for OAuth popups to work
+        # Note: Google/Apple OAuth requires window.postMessage which COOP blocks
+        # Setting to unsafe-none allows OAuth while still maintaining other security
+        response.headers["Cross-Origin-Opener-Policy"] = "unsafe-none"
         response.headers["Cross-Origin-Embedder-Policy"] = "unsafe-none"
         
         # Prevent MIME type sniffing
@@ -35,18 +37,19 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         
         # Content Security Policy (production only)
         if settings.env == "production":
-            # CSP tailored for your streaming app
+            # CSP tailored for your streaming app with OAuth support
             csp_directives = [
                 "default-src 'self'",
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval'",  # Needed for React
-                "style-src 'self' 'unsafe-inline'",  # Needed for styled components
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://appleid.cdn-apple.com",  # OAuth scripts
+                "style-src 'self' 'unsafe-inline' https://accounts.google.com https://appleid.cdn-apple.com",  # OAuth styles
                 "img-src 'self' data: https:",  # Allow external logos/images
                 "media-src 'self' blob: https:",  # Allow streaming from external sources
-                "connect-src 'self' https://iptv-org.github.io https://de1.api.radio-browser.info https://raw.githubusercontent.com",  # API endpoints
+                "connect-src 'self' https://iptv-org.github.io https://de1.api.radio-browser.info https://raw.githubusercontent.com https://accounts.google.com https://appleid.apple.com",  # OAuth + API endpoints
                 "font-src 'self' data:",
                 "object-src 'none'",
                 "base-uri 'self'",
-                "form-action 'self'",
+                "form-action 'self' https://accounts.google.com https://appleid.apple.com",  # OAuth form actions
+                "frame-src 'self' https://accounts.google.com https://appleid.apple.com",  # OAuth iframes
                 "frame-ancestors 'none'",
                 "upgrade-insecure-requests",
             ]

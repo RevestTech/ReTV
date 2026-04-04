@@ -13,10 +13,16 @@ validator_router = APIRouter(prefix="/api/validator", tags=["validator"])
 
 @router.post("/{channel_id}", response_model=HealthCheckResult)
 async def healthcheck_channel(channel_id: str, db: AsyncSession = Depends(get_db)):
-    result = await check_channel(db, channel_id)
-    if "error" in result:
-        raise HTTPException(status_code=404, detail=result["error"])
-    return result
+    try:
+        result = await check_channel(db, channel_id)
+        if "error" in result:
+            raise HTTPException(status_code=404, detail=result["error"])
+        return result
+    except Exception as e:
+        # Log the error for debugging
+        import logging
+        logging.getLogger(__name__).error(f"Healthcheck failed for channel {channel_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Healthcheck failed: {str(e)}")
 
 
 @router.post("/batch", response_model=list[HealthCheckResult])
