@@ -1,3 +1,5 @@
+import { authenticatedFetch } from '../utils/csrf';
+
 const BASE = "/api";
 
 export async function fetchChannels({ query, category, country, language, status, page = 1, perPage = 40 }) {
@@ -40,7 +42,7 @@ export async function fetchStreams(channelId) {
 }
 
 export async function runHealthCheck(channelId) {
-  const res = await fetch(`${BASE}/healthcheck/${channelId}`, { method: "POST" });
+  const res = await authenticatedFetch(`${BASE}/healthcheck/${channelId}`, { method: "POST" });
   if (!res.ok) throw new Error("Health check failed");
   return res.json();
 }

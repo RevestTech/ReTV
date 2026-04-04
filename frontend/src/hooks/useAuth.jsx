@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { startRegistration, startAuthentication } from "@simplewebauthn/browser";
+import { authenticatedFetch, getCsrfToken } from "../utils/csrf";
 
 const TOKEN_KEY = "adajoon_token";
 const USER_KEY = "adajoon_user";
@@ -34,7 +35,7 @@ export function AuthProvider({ children }) {
   const loginWithGoogle = useCallback(async (credential) => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/google`, {
+      const res = await authenticatedFetch(`${API_BASE}/google`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ credential }),
@@ -50,7 +51,7 @@ export function AuthProvider({ children }) {
   const loginWithApple = useCallback(async (idToken, userName) => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/apple`, {
+      const res = await authenticatedFetch(`${API_BASE}/apple`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id_token: idToken, user_name: userName || "" }),
@@ -64,21 +65,17 @@ export function AuthProvider({ children }) {
 
   // --- Passkey registration (user must be logged in) ---
   const registerPasskey = useCallback(async (name) => {
-    const t = localStorage.getItem(TOKEN_KEY);
-    if (!t) throw new Error("Not authenticated");
-
-    const optRes = await fetch(`${API_BASE}/passkey/register-options`, {
+    const optRes = await authenticatedFetch(`${API_BASE}/passkey/register-options`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${t}` },
     });
     if (!optRes.ok) throw new Error("Failed to get registration options");
     const { options, challenge_token } = await optRes.json();
 
     const credential = await startRegistration(options);
 
-    const verRes = await fetch(`${API_BASE}/passkey/register`, {
+    const verRes = await authenticatedFetch(`${API_BASE}/passkey/register`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ credential, challenge_token, name: name || "Passkey" }),
     });
     if (!verRes.ok) throw new Error("Passkey registration failed");
@@ -89,13 +86,13 @@ export function AuthProvider({ children }) {
   const loginWithPasskey = useCallback(async () => {
     setLoading(true);
     try {
-      const optRes = await fetch(`${API_BASE}/passkey/login-options`, { method: "POST" });
+      const optRes = await authenticatedFetch(`${API_BASE}/passkey/login-options`, { method: "POST" });
       if (!optRes.ok) throw new Error("Failed to get login options");
       const { options, challenge_token } = await optRes.json();
 
       const credential = await startAuthentication(options);
 
-      const verRes = await fetch(`${API_BASE}/passkey/login`, {
+      const verRes = await authenticatedFetch(`${API_BASE}/passkey/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ credential, challenge_token }),
@@ -114,12 +111,8 @@ export function AuthProvider({ children }) {
   }, []);
 
   const fetchFavorites = useCallback(async () => {
-    const t = localStorage.getItem(TOKEN_KEY);
-    if (!t) return null;
     try {
-      const res = await fetch(`${API_BASE}/favorites`, {
-        headers: { Authorization: `Bearer ${t}` },
-      });
+      const res = await authenticatedFetch(`${API_BASE}/favorites`);
       if (!res.ok) return null;
       return await res.json();
     } catch {
@@ -128,31 +121,32 @@ export function AuthProvider({ children }) {
   }, []);
 
   const addFavorite = useCallback(async (itemType, itemId, itemData) => {
-    const t = localStorage.getItem(TOKEN_KEY);
-    if (!t) return;
-    await fetch(`${API_BASE}/favorites`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` },
-      body: JSON.stringify({ item_type: itemType, item_id: itemId, item_data: itemData }),
-    });
+    try {
+      await authenticatedFetch(`${API_BASE}/favorites`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ item_type: itemType, item_id: itemId, item_data: itemData }),
+      });
+    } catch (error) {
+      console.error("Failed to add favorite:", error);
+    }
   }, []);
 
   const removeFavorite = useCallback(async (itemType, itemId) => {
-    const t = localStorage.getItem(TOKEN_KEY);
-    if (!t) return;
-    await fetch(`${API_BASE}/favorites/${itemType}/${itemId}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${t}` },
-    });
+    try {
+      await authenticatedFetch(`${API_BASE}/favorites/${itemType}/${itemId}`, {
+        method: "DELETE",
+      });
+    } catch (error) {
+      console.error("Failed to remove favorite:", error);
+    }
   }, []);
 
   const syncFavorites = useCallback(async (favorites) => {
-    const t = localStorage.getItem(TOKEN_KEY);
-    if (!t) return null;
     try {
-      const res = await fetch(`${API_BASE}/favorites/sync`, {
+      const res = await authenticatedFetch(`${API_BASE}/favorites/sync`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(favorites),
       });
       if (!res.ok) return null;
@@ -163,9 +157,8 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    const t = localStorage.getItem(TOKEN_KEY);
-    if (!t || !user) return;
-    fetch(`${API_BASE}/me`, { headers: { Authorization: `Bearer ${t}` } })
+    if (!user) return;
+    authenticatedFetch(`${API_BASE}/me`)
       .then((res) => {
         if (!res.ok) { logout(); return null; }
         return res.json();
