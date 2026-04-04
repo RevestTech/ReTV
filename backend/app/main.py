@@ -274,14 +274,14 @@ async def serve_assets(request: Request, path: str):
     return await _proxy_to_frontend(request, f"assets/{path}")
 
 
-@app.get("/{page}")
+@app.get("/{page:path}")
 async def serve_page(request: Request, page: str):
     """
     Serve frontend pages (but not API routes).
     This catches routes like /about, /contact, etc. but not /api/*
     """
-    # Explicitly block API routes
-    if page.startswith("api"):
+    # Explicitly block API routes - must check for both /api and api/
+    if page == "api" or page.startswith("api/"):
         raise HTTPException(status_code=404, detail="Not found")
     
     return await _proxy_to_frontend(request, page)
