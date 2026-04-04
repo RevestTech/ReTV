@@ -40,12 +40,12 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             # CSP tailored for your streaming app with OAuth support
             csp_directives = [
                 "default-src 'self'",
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://appleid.cdn-apple.com",  # OAuth scripts
-                "style-src 'self' 'unsafe-inline' https://accounts.google.com https://appleid.cdn-apple.com",  # OAuth styles
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://appleid.cdn-apple.com https://www.gstatic.com https://imasdk.googleapis.com",  # OAuth + Chromecast + IMA SDK
+                "style-src 'self' 'unsafe-inline' https://accounts.google.com https://appleid.cdn-apple.com https://fonts.googleapis.com",  # OAuth + Google Fonts
                 "img-src 'self' data: https:",  # Allow external logos/images
                 "media-src 'self' blob: https:",  # Allow streaming from external sources
                 "connect-src 'self' https://iptv-org.github.io https://de1.api.radio-browser.info https://raw.githubusercontent.com https://accounts.google.com https://appleid.apple.com",  # OAuth + API endpoints
-                "font-src 'self' data:",
+                "font-src 'self' data: https://fonts.gstatic.com",  # Google Fonts font files
                 "object-src 'none'",
                 "base-uri 'self'",
                 "form-action 'self' https://accounts.google.com https://appleid.apple.com",  # OAuth form actions
