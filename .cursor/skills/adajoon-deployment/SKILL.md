@@ -184,6 +184,39 @@ BACKEND_URL=${{backend.RAILWAY_PRIVATE_DOMAIN}}
 PORT=${{PORT}}  # Railway provides this
 ```
 
+### ⚠️ Environment Variable Parity Checklist
+
+**CRITICAL:** When deploying multiple services that share code (backend, worker, etc.), ensure ALL services have required shared environment variables.
+
+#### Required for All Python Services
+
+```bash
+# Security (REQUIRED - validated at startup)
+✅ JWT_SECRET          # 32+ chars, shared across all services
+✅ DATABASE_URL        # Same Postgres instance  
+✅ REDIS_URL           # Same Redis instance
+✅ ENVIRONMENT         # prod/staging/dev
+```
+
+#### Railway Reference Pattern
+
+Use Railway's reference variables to share secrets:
+
+```bash
+# In worker service:
+JWT_SECRET = ${{backend.JWT_SECRET}}
+DATABASE_URL = ${{Postgres.DATABASE_URL}}
+REDIS_URL = ${{Redis.REDIS_URL}}
+```
+
+#### Pre-Deployment Checklist
+
+1. Copy shared env vars from existing service
+2. Verify: `railway variables | grep JWT_SECRET`
+3. Test startup logs for "Database initialization complete"
+
+**Incident:** [2026-04-04 worker crash](../adajoon-skill-improvement/learnings/2026-04-04-worker-jwt-secret-missing.md) - Missing JWT_SECRET
+
 ---
 
 ## Frontend Proxy Pattern
