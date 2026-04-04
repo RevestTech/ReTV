@@ -5,12 +5,15 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Depends, HTTPException, status, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from starlette.middleware.gzip import GZipMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
+from pathlib import Path
 
 from app.database import engine, Base, async_session, get_db
 from app.config import settings
@@ -228,3 +231,27 @@ async def trigger_sync(x_sync_key: str | None = Header(default=None, alias="X-Sy
     async with async_session() as db:
         results = await full_sync(db)
     return {"status": "complete", "results": results}
+
+
+# Serve frontend static files (if available)
+STATIC_DIR = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
+if STATIC_DIR.exists():
+    logger.info(f"Serving frontend from {STATIC_DIR}")
+    
+    # Mount assets with long cache
+    app.mount("/assets", StaticFiles(directory=STATIC_DIR / "assets"), name="assets")
+    
+    # Serve other static files
+    @app.get("/{catchall:path}")
+    async def serve_frontend(catchall: str):
+        """Serve frontend SPA - catches all non-API routes"""
+        file_path = STATIC_DIR / catchall
+        
+        # If it's a file and exists, serve it
+        if file_path.is_file():
+            return FileResponse(file_path)
+        
+        # Otherwise serve index.html for SPA routing
+        return FileResponse(STATIC_DIR / "index.html")
+else:
+    logger.warning("Frontend dist directory not found, skipping static file serving")

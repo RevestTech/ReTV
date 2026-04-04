@@ -1,4 +1,16 @@
-FROM python:3.12-slim AS builder
+# Stage 1: Build frontend
+FROM node:20-alpine AS frontend-builder
+
+WORKDIR /frontend
+
+COPY ../frontend/package*.json ./
+RUN npm ci --only=production
+
+COPY ../frontend .
+RUN npm run build
+
+# Stage 2: Build Python dependencies
+FROM python:3.12-slim AS python-builder
 
 WORKDIR /app
 
@@ -8,6 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends gcc libpq-dev &
 COPY requirements.txt .
 RUN pip wheel --no-cache-dir --wheel-dir /wheels -r requirements.txt
 
+# Stage 3: Final image
 FROM python:3.12-slim
 
 WORKDIR /app
@@ -15,11 +28,14 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends libpq5 && \
     rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /wheels /wheels
+COPY --from=python-builder /wheels /wheels
 COPY requirements.txt .
 RUN pip install --no-cache-dir --no-index --find-links=/wheels -r requirements.txt && rm -rf /wheels
 
 COPY . .
+
+# Copy frontend build from frontend-builder stage
+COPY --from=frontend-builder /frontend/dist ../frontend/dist
 
 RUN chmod +x start.sh
 
