@@ -3509,6 +3509,8 @@ body {
     border-radius: 0 calc(var(--radius-sm) - 2px) calc(var(--radius-sm) - 2px) 0;
   }
   .quality-btn { padding: 6px 10px; font-size: 11px; white-space: nowrap; }
+  .filter-group-label { font-size: 9px; margin: 0 2px 0 4px; }
+  .filter-separator { height: 16px; margin: 0 4px; }
 
   /* Grids */
   .channel-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
@@ -3552,6 +3554,10 @@ body {
   .search-icon { width: 13px; height: 13px; left: 10px !important; }
 
   .main-content { padding: 8px 8px 0; }
+  
+  /* Hide filter group labels on very small screens */
+  .filter-group-label { display: none; }
+  .filter-separator { margin: 0 2px; }
 
   .recent-row {
     min-height: 68px;
