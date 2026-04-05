@@ -1222,6 +1222,32 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 3px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.filter-group-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  opacity: 0.6;
+  margin: 0 4px 0 8px;
+  white-space: nowrap;
+}
+
+.filter-separator {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  margin: 0 8px;
+  align-self: stretch;
+}
+
+.btn-icon {
+  font-size: 14px;
+  line-height: 1;
 }
 
 .quality-btn {

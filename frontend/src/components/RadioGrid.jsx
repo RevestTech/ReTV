@@ -38,12 +38,47 @@ function getRadioStreamStatus(station) {
 }
 
 const QUALITY_OPTIONS = [
-  { key: "all", label: "All" },
-  { key: "has_stream", label: "Working", dot: "online" },
-  { key: "verified", label: "Verified", dot: "verified" },
-  { key: "live", label: "Live", dot: "online" },
-  { key: "highly_rated", label: "Highly Rated", dot: "verified" },
-  { key: "hide_dead", label: "Hide Dead", dot: "offline" },
+  { 
+    key: "all", 
+    label: "All", 
+    tooltip: "Show all stations (no filtering)",
+    group: "base"
+  },
+  { 
+    key: "verified", 
+    label: "Verified", 
+    dot: "verified",
+    tooltip: "Fully tested and confirmed working",
+    group: "system"
+  },
+  { 
+    key: "live", 
+    label: "Online Now", 
+    dot: "online",
+    tooltip: "Currently streaming (last check successful)",
+    group: "system"
+  },
+  { 
+    key: "has_stream", 
+    label: "Working", 
+    dot: "online",
+    tooltip: "Has a working stream URL",
+    group: "system"
+  },
+  { 
+    key: "highly_rated", 
+    label: "Highly Rated", 
+    icon: "⭐",
+    tooltip: "Community approved: 3+ positive votes",
+    group: "community"
+  },
+  { 
+    key: "hide_dead", 
+    label: "Hide Broken", 
+    dot: "offline",
+    tooltip: "Hide offline and broken stations",
+    group: "hide"
+  },
 ];
 
 export default function RadioGrid({
@@ -149,7 +184,8 @@ export default function RadioGrid({
         </div>
         <div className="content-toolbar">
           <div className="quality-filter">
-            {QUALITY_OPTIONS.map((opt) => {
+            <span className="filter-group-label">System Status:</span>
+            {QUALITY_OPTIONS.filter(opt => opt.group === "base" || opt.group === "system").map((opt) => {
               const val = opt.key === "hide_dead" ? "hide_offline" : opt.key;
               const active = opt.key === "all" ? activeQualities.length === 0 : activeQualities.includes(val);
               return (
@@ -157,7 +193,46 @@ export default function RadioGrid({
                   key={opt.key}
                   className={`quality-btn ${active ? "active" : ""}`}
                   onClick={() => onQualityChange(opt.key)}
+                  title={opt.tooltip}
                 >
+                  {opt.icon && <span className="btn-icon">{opt.icon}</span>}
+                  {opt.dot && <span className={`status-dot ${opt.dot}`} />}
+                  {opt.label}
+                </button>
+              );
+            })}
+            
+            <span className="filter-separator" />
+            <span className="filter-group-label">Community:</span>
+            {QUALITY_OPTIONS.filter(opt => opt.group === "community").map((opt) => {
+              const val = opt.key === "hide_dead" ? "hide_offline" : opt.key;
+              const active = activeQualities.includes(val);
+              return (
+                <button
+                  key={opt.key}
+                  className={`quality-btn ${active ? "active" : ""}`}
+                  onClick={() => onQualityChange(opt.key)}
+                  title={opt.tooltip}
+                >
+                  {opt.icon && <span className="btn-icon">{opt.icon}</span>}
+                  {opt.dot && <span className={`status-dot ${opt.dot}`} />}
+                  {opt.label}
+                </button>
+              );
+            })}
+            
+            <span className="filter-separator" />
+            {QUALITY_OPTIONS.filter(opt => opt.group === "hide").map((opt) => {
+              const val = opt.key === "hide_dead" ? "hide_offline" : opt.key;
+              const active = activeQualities.includes(val);
+              return (
+                <button
+                  key={opt.key}
+                  className={`quality-btn ${active ? "active" : ""}`}
+                  onClick={() => onQualityChange(opt.key)}
+                  title={opt.tooltip}
+                >
+                  {opt.icon && <span className="btn-icon">{opt.icon}</span>}
                   {opt.dot && <span className={`status-dot ${opt.dot}`} />}
                   {opt.label}
                 </button>
