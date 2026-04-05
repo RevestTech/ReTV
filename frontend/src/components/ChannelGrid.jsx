@@ -1,5 +1,6 @@
 import ViewToggle from "./ViewToggle";
 import VoteIndicator from "./VoteIndicator";
+import QuickFilters from "./QuickFilters";
 
 const GUEST_LIMIT = 20;
 
@@ -194,6 +195,17 @@ export default function ChannelGrid({
           <ViewToggle viewMode={viewMode} onViewToggle={onViewToggle} />
         </div>
       </div>
+
+      {!showFavorites && !search && activeCategories.length === 0 && activeCountries.length === 0 && (
+        <QuickFilters
+          mode="tv"
+          onVerifiedOnly={() => onQualityChange('verified')}
+          onLiveOnly={() => onQualityChange('live')}
+          onHighlyRated={() => {}}
+          activeFilters={activeQualities}
+          stats={stats}
+        />
+      )}
 
       <div className={`content-body${loading ? " content-loading" : ""}`}>
         {hasFilters && (

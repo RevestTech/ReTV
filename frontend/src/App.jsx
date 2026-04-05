@@ -9,6 +9,7 @@ import MiniPlayer from "./components/MiniPlayer";
 import GuestNoticeToast from "./components/GuestNoticeToast";
 import FavoritesView from "./components/FavoritesView";
 import RecentlyPlayed from "./components/RecentlyPlayed";
+import BackToTop from "./components/BackToTop";
 import useFavorites, { useRadioFavorites } from "./hooks/useFavorites";
 import useRecentlyPlayed from "./hooks/useRecentlyPlayed";
 import { useAuth } from "./hooks/useAuth";
@@ -745,6 +746,7 @@ export default function App() {
           />
         </Suspense>
       )}
+      <BackToTop />
       <footer className="app-footer">
         <span>&copy; {new Date().getFullYear()} Revest Technology. All rights reserved.</span>
         <span className="footer-version">v2.2.0</span>
