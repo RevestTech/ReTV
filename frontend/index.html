@@ -56,45 +56,34 @@
     <script src="https://imasdk.googleapis.com/js/sdkloader/ima3.js"></script>
   </head>
   <body>
+    <!-- Client-side redirect MUST run before anything else -->
+    <script src="/redirect.js"></script>
+    
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
     
-    <!-- Service Worker Registration -->
+    <!-- Service Worker Registration - DISABLED temporarily -->
     <script>
+      // Service Worker temporarily disabled to fix caching issues
+      // Will re-enable after domain routing is stable
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then((registration) => {
-              console.log('SW registered:', registration.scope);
-              
-              // Check for updates every 60 seconds
-              setInterval(() => {
-                registration.update();
-              }, 60000);
-              
-              // Handle updates
-              registration.addEventListener('updatefound', () => {
-                const newWorker = registration.installing;
-                newWorker.addEventListener('statechange', () => {
-                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    console.log('New SW available, reloading...');
-                    // Automatically update to new version
-                    newWorker.postMessage({ type: 'SKIP_WAITING' });
-                    window.location.reload();
-                  }
-                });
-              });
-            })
-            .catch((error) => {
-              console.error('SW registration failed:', error);
-            });
-          
-          // Handle controller change (new SW activated)
-          navigator.serviceWorker.addEventListener('controllerchange', () => {
-            console.log('SW controller changed, reloading page');
-            window.location.reload();
-          });
+        // Unregister any existing service workers
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for(let registration of registrations) {
+            registration.unregister();
+            console.log('[SW] Unregistered:', registration.scope);
+          }
         });
+        
+        // Clear all caches
+        if ('caches' in window) {
+          caches.keys().then(function(names) {
+            for (let name of names) {
+              caches.delete(name);
+              console.log('[Cache] Deleted:', name);
+            }
+          });
+        }
       }
     </script>
   </body>

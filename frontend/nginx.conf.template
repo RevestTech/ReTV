@@ -4,6 +4,11 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
+    # Redirect non-www to www (only in production)
+    if ($host = 'adajoon.com') {
+        return 301 https://www.adajoon.com$request_uri;
+    }
+
     # Security headers
     add_header Cross-Origin-Embedder-Policy "unsafe-none" always;
 
