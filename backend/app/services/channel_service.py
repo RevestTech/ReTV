@@ -1,7 +1,7 @@
 from sqlalchemy import case, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Channel, Category, Country, Stream, RadioStation
+from app.models import Channel, Category, Country, Stream, RadioStation, UserVote
 from app.schemas import ChannelSearchParams
 
 
@@ -60,6 +60,18 @@ async def search_channels(db: AsyncSession, params: ChannelSearchParams):
                 cond = ~Channel.health_status.in_(("offline", "error", "timeout", "geo_blocked"))
                 query = query.where(cond)
                 count_query = count_query.where(cond)
+            elif s == "highly_rated":
+                subq = (
+                    select(UserVote.item_id)
+                    .where(
+                        UserVote.item_type == "tv",
+                        UserVote.vote_type.in_(("works", "like"))
+                    )
+                    .group_by(UserVote.item_id)
+                    .having(func.count(UserVote.id) >= 3)
+                )
+                query = query.where(Channel.id.in_(subq))
+                count_query = count_query.where(Channel.id.in_(subq))
         if health_includes:
             combined = health_includes[0] if len(health_includes) == 1 else or_(*health_includes)
             query = query.where(combined)

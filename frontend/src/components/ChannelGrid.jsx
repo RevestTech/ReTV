@@ -68,6 +68,7 @@ const QUALITY_OPTIONS = [
   { key: "has_stream", label: "Has Stream", dot: "online" },
   { key: "verified", label: "Verified", dot: "verified" },
   { key: "live", label: "Live", dot: "online" },
+  { key: "highly_rated", label: "Highly Rated", dot: "verified" },
   { key: "hide_dead", label: "Hide Dead", dot: "offline" },
 ];
 
@@ -201,7 +202,7 @@ export default function ChannelGrid({
           mode="tv"
           onVerifiedOnly={() => onQualityChange('verified')}
           onLiveOnly={() => onQualityChange('live')}
-          onHighlyRated={() => {}}
+          onHighlyRated={() => onQualityChange('highly_rated')}
           activeFilters={activeQualities}
           stats={stats}
         />

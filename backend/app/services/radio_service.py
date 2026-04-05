@@ -5,7 +5,7 @@ from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
-from app.models import RadioStation
+from app.models import RadioStation, UserVote
 from app.schemas import RadioSearchParams
 
 logger = logging.getLogger(__name__)
@@ -162,6 +162,18 @@ async def search_radio(db: AsyncSession, params: RadioSearchParams):
                 cond = ~RadioStation.health_status.in_(("offline", "error", "timeout", "geo_blocked"))
                 query = query.where(cond)
                 count_query = count_query.where(cond)
+            elif s == "highly_rated":
+                subq = (
+                    select(UserVote.item_id)
+                    .where(
+                        UserVote.item_type == "radio",
+                        UserVote.vote_type.in_(("works", "like"))
+                    )
+                    .group_by(UserVote.item_id)
+                    .having(func.count(UserVote.id) >= 3)
+                )
+                query = query.where(RadioStation.id.in_(subq))
+                count_query = count_query.where(RadioStation.id.in_(subq))
         if health_includes:
             combined = health_includes[0] if len(health_includes) == 1 else or_(*health_includes)
             query = query.where(combined)
