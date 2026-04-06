@@ -1,3 +1,7 @@
+/* Import TV-specific styles */
+@import "./styles/tv.css";
+@import "./styles/tv-debug.css";
+
 :root {
   --bg-primary: #0f0f1a;
   --bg-secondary: #1a1a2e;

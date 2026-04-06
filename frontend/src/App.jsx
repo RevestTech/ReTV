@@ -10,10 +10,13 @@ import GuestNoticeToast from "./components/GuestNoticeToast";
 import FavoritesView from "./components/FavoritesView";
 import RecentlyPlayed from "./components/RecentlyPlayed";
 import BackToTop from "./components/BackToTop";
+import TVDebugInfo from "./components/TVDebugInfo";
 import useFavorites, { useRadioFavorites } from "./hooks/useFavorites";
 import useRecentlyPlayed from "./hooks/useRecentlyPlayed";
 import { useAuth } from "./hooks/useAuth";
 import { useVotes } from "./hooks/useVotes";
+import { useDevice } from "./hooks/useDevice";
+import { useTVNavigation } from "./hooks/useTVNavigation";
 import {
   readUrlParams,
   writeUrlParams,
@@ -61,6 +64,7 @@ function readInitialFromUrl() {
 const IU = readInitialFromUrl();
 
 export default function App() {
+  const device = useDevice();
   const [mode, setMode] = useState(IU.mode);
   const [viewMode, setViewMode] = useState(IU.viewMode);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -70,6 +74,35 @@ export default function App() {
     } catch {
       return false;
     }
+  });
+
+  useEffect(() => {
+    if (device.isTV) {
+      document.body.classList.add('tv-device');
+      if (device.isTizen) {
+        document.body.classList.add('tv-tizen');
+      } else if (device.isWebOS) {
+        document.body.classList.add('tv-webos');
+      }
+    }
+    return () => {
+      document.body.classList.remove('tv-device', 'tv-tizen', 'tv-webos');
+    };
+  }, [device.isTV, device.isTizen, device.isWebOS]);
+
+  useTVNavigation({
+    enabled: device.isTV,
+    onBack: useCallback(() => {
+      if (showLogin) {
+        setShowLogin(false);
+      } else if (selectedChannel) {
+        closeTvPlayer();
+      } else if (selectedStation) {
+        stopRadio();
+      } else if (sidebarOpen) {
+        setSidebarOpen(false);
+      }
+    }, [showLogin, selectedChannel, selectedStation, sidebarOpen]),
   });
 
   useEffect(() => {
@@ -747,9 +780,10 @@ export default function App() {
         </Suspense>
       )}
       <BackToTop />
+      <TVDebugInfo />
       <footer className="app-footer">
         <span>&copy; {new Date().getFullYear()} Revest Technology. All rights reserved.</span>
-        <span className="footer-version">v2.2.0</span>
+        <span className="footer-version">v2.5.0</span>
       </footer>
     </>
   );
