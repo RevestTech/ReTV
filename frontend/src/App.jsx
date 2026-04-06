@@ -90,21 +90,6 @@ export default function App() {
     };
   }, [device.isTV, device.isTizen, device.isWebOS]);
 
-  useTVNavigation({
-    enabled: device.isTV,
-    onBack: useCallback(() => {
-      if (showLogin) {
-        setShowLogin(false);
-      } else if (selectedChannel) {
-        closeTvPlayer();
-      } else if (selectedStation) {
-        stopRadio();
-      } else if (sidebarOpen) {
-        setSidebarOpen(false);
-      }
-    }, [showLogin, selectedChannel, selectedStation, sidebarOpen]),
-  });
-
   useEffect(() => {
     try {
       localStorage.setItem("retv-sidebar-rail-collapsed", sidebarRailCollapsed ? "1" : "0");
@@ -524,6 +509,21 @@ export default function App() {
     setSelectedStation(station);
     setRadioModalOpen(true);
   }, []);
+
+  useTVNavigation({
+    enabled: device.isTV,
+    onBack: useCallback(() => {
+      if (showLogin) {
+        setShowLogin(false);
+      } else if (selectedChannel) {
+        closeTvPlayer();
+      } else if (selectedStation) {
+        stopRadio();
+      } else if (sidebarOpen) {
+        setSidebarOpen(false);
+      }
+    }, [showLogin, selectedChannel, selectedStation, sidebarOpen, closeTvPlayer, stopRadio]),
+  });
 
   const handleModeSwitch = (newMode) => {
     if (selectedChannel || selectedStation) {

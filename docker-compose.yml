@@ -15,16 +15,30 @@ services:
       timeout: 3s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   backend:
     build: ./backend
     environment:
       ENV: dev
       DATABASE_URL: postgresql+asyncpg://retv:retv_secret@db:5432/retv
       SYNC_DATABASE_URL: postgresql://retv:retv_secret@db:5432/retv
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: dev-jwt-secret-change-in-production-min-32-chars
     ports:
       - "8000:8000"
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     volumes:
       - ./backend/app:/app/app
@@ -36,8 +50,12 @@ services:
       ENV: dev
       DATABASE_URL: postgresql+asyncpg://retv:retv_secret@db:5432/retv
       SYNC_DATABASE_URL: postgresql://retv:retv_secret@db:5432/retv
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: dev-jwt-secret-change-in-production-min-32-chars
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     restart: unless-stopped
     volumes:
