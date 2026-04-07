@@ -148,26 +148,66 @@ After configuration, test these:
 **Cause**: Wrong `ENV` variable (not "production")  
 **Fix**: Set `ENV=production` in Railway environment variables
 
+### Issue: 502 Bad Gateway on all API calls (frontend)
+**Cause**: Frontend nginx proxy pointing to wrong backend port. Railway uses port 8080 internally, not 8000.
+**Symptoms**: Deploy logs show `connect() failed (111: Connection refused)` pointing to port 8000.
+**Fix**: Update `frontend/start.sh` default BACKEND_URL to use port 8080:
+```sh
+export BACKEND_URL=${BACKEND_URL:-http://backend.railway.internal:8080}
+```
+Or set `BACKEND_URL=http://backend.railway.internal:8080` as an environment variable on the frontend service in Railway.
+
 ### Issue: SSL certificate errors
 **Cause**: Railway hasn't provisioned SSL for new domain  
 **Fix**: Wait 2-5 minutes after adding domain, Railway auto-provisions Let's Encrypt certs
 
-## Current Architecture
+## Current Architecture (Updated 2026-04-07)
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  User Browser                                                │
-│  https://adajoon.com/                                       │
-└──────────────────┬──────────────────────────────────────────┘
-                   │
-                   ↓
-┌─────────────────────────────────────────────────────────────┐
-│  Railway (Backend Service)                                   │
-│  - Receives traffic for both domains                         │
-│  - WWWRedirectMiddleware checks host header                 │
-│  - If host == "adajoon.com" → 301 to www.adajoon.com       │
-│  - If host == "www.adajoon.com" → Process request          │
-└─────────────────────────────────────────────────────────────┘
+Railway Project: Adajoon
+├── Redis         (Online, with redis-volume)
+├── Postgres      (Online, with postgres-volume)
+├── frontend      (Online, nginx serving React SPA)
+│   ├── Public domain: adajoon-production.up.railway.app
+│   ├── Serves: static assets (React build)
+│   └── Proxies: /api/* → backend via Railway private networking
+├── backend       (Online, FastAPI/Uvicorn on port 8080)
+│   ├── Public domain: adajoon.com / www.adajoon.com
+│   ├── Handles: /api/* routes
+│   └── Proxies: / and /assets/* to frontend service
+└── worker        (Online, background tasks)
+```
+
+### Frontend → Backend Proxy (CRITICAL)
+
+The frontend nginx proxies API calls to the backend via Railway's **private networking**:
+
+```
+Frontend nginx → http://backend.railway.internal:8080/api/
+```
+
+**IMPORTANT**: Railway assigns port 8080 to services internally. The backend's
+`Dockerfile` says `EXPOSE 8000` and `start.sh` defaults to port 8000, but Railway
+overrides this with its own `PORT` environment variable (8080). The frontend's
+`start.sh` must use port **8080** when connecting via private networking:
+
+```sh
+# frontend/start.sh — correct default
+export BACKEND_URL=${BACKEND_URL:-http://backend.railway.internal:8080}
+```
+
+### Traffic Flow
+
+```
+User Browser
+    │
+    ├── https://www.adajoon.com → Backend (FastAPI)
+    │       ├── /api/*  → handled directly
+    │       └── /*      → proxied to frontend (internal)
+    │
+    └── https://adajoon-production.up.railway.app → Frontend (nginx)
+            ├── /*      → serves React SPA
+            └── /api/*  → proxied to backend (internal :8080)
 ```
 
 ## Quick Fix (Temporary)

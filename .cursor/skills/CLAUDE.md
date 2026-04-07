@@ -24,25 +24,26 @@ This comprehensive guide consolidates all Adajoon coding skills for use in direc
 - **Auth**: Cookie-based JWT with CSRF protection
 - **Deployment**: Railway (dual-service architecture)
 
-### Architecture
+### Architecture (Updated 2026-04-07)
 ```
-┌──────────┐
-│  Client  │
-└────┬─────┘
-     │ HTTPS
-┌────▼─────────────────┐
-│  Backend (FastAPI)   │ ← Public domain (adajoon.com)
-│  - API routes        │
-│  - Security headers  │
-│  - Proxies frontend  │
-└────┬─────────────────┘
-     │ Internal
-┌────▼─────────────────┐
-│  Frontend (React)    │ ← Internal only (no public domain)
-│  - Served by nginx   │
-│  - SPA with routing  │
-└──────────────────────┘
+Railway Project: Adajoon (production)
+├── Redis         (cache + sessions, with volume)
+├── Postgres      (primary DB, with volume)
+├── frontend      (nginx → React SPA)
+│   ├── Public: adajoon-production.up.railway.app
+│   └── Proxies /api/* → backend.railway.internal:8080
+├── backend       (FastAPI/Uvicorn)
+│   ├── Public: adajoon.com / www.adajoon.com
+│   ├── Handles /api/* routes
+│   └── Proxies / → frontend (internal)
+└── worker        (background tasks)
 ```
+
+**Two public entry points:**
+1. `www.adajoon.com` → Backend (handles API + proxies frontend)
+2. `adajoon-production.up.railway.app` → Frontend (serves SPA + proxies API to backend)
+
+**Critical**: Service-to-service communication uses Railway private networking on port **8080** (not 8000). Example: `http://backend.railway.internal:8080`
 
 ---
 

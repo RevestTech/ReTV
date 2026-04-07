@@ -5,6 +5,20 @@ All notable changes to Adajoon will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.1] - 2026-04-07
+
+### Fixed
+- **502 Bad Gateway on all API calls**: Frontend nginx proxy was defaulting to port 8000 but Railway runs the backend on port 8080. Updated `frontend/start.sh` default `BACKEND_URL` from `http://backend:8000` to `http://backend.railway.internal:8080`
+- **Nginx proxy template**: Added `proxy_connect_timeout 10s` to `/api/` location block in `nginx.conf.template` for better error handling
+
+### Changed
+- **Railway service cleanup**: Renamed frontend service from "Adajoon" back to "frontend" for consistency with codebase conventions
+- **Backend CORS origins**: Added `https://adajoon-production.up.railway.app` to `CORS_ORIGINS` and `WEBAUTHN_ORIGIN` environment variables
+
+### Removed
+- Deleted orphaned "frontend" service (had failed deployment from earlier rebuild)
+- Deleted accidental "function-bun" service (created by Railway Agent intercepting keyboard input)
+
 ## [2.5.0] - 2026-04-05
 
 ### Added

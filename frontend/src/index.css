@@ -3377,7 +3377,7 @@ body {
 
   .sidebar-wrap .sidebar {
     display: none; position: fixed; top: 0; left: 0;
-    width: var(--sidebar-width); height: 100dvh; z-index: 1000;
+    width: var(--sidebar-width); height: 100vh; height: 100dvh; z-index: 1000;
     padding-top: 56px; box-shadow: 4px 0 24px rgba(0,0,0,.5);
     overflow-y: auto; -webkit-overflow-scrolling: touch;
   }
@@ -3613,7 +3613,7 @@ body {
   .modal-content {
     width: 100%; max-width: 100%;
     border-radius: 16px 16px 0 0;
-    max-height: 92dvh; overflow-y: auto;
+    max-height: 92vh; max-height: 92dvh; overflow-y: auto;
   }
   .radio-modal { max-width: 100%; }
   .modal-header { padding: 12px 14px; }

@@ -1,11 +1,12 @@
 # Adajoon Deployment & Railway Patterns
 
-**Version**: 1.0.1 (Updated: 2026-04-04)
+**Version**: 1.1.0 (Updated: 2026-04-07)
 
-**Skill Type:** Deployment, Infrastructure, Docker  
+**Skill Type:** Deployment, Infrastructure, Docker
 **Auto-triggers:** When working with Dockerfiles, Railway configuration, deployment scripts, nginx configs, or environment variables
 
 ## Changelog
+- v1.1.0 (2026-04-07): Added Railway port mapping gotcha, private networking patterns, service naming, and Railway API/CLI usage notes after 502 incident
 - v1.0.1 (2026-04-04): Added environment variable parity checklist after worker JWT_SECRET incident
 - v1.0.0 (2026-04-04): Initial versioning - established baseline deployment patterns
 
@@ -112,6 +113,83 @@ CMD ["/start.sh"]
 - Copy only /dist output, not source files
 - Health check uses wget (available in nginx:alpine)
 - nginx.conf.template for Railway env var substitution
+
+---
+
+## ⚠️ Railway Port Mapping (CRITICAL)
+
+Railway assigns its own port to services via the `PORT` environment variable (typically **8080**). This overrides whatever port the Dockerfile `EXPOSE` or `start.sh` defaults to.
+
+### The Gotcha
+
+The backend Dockerfile says `EXPOSE 8000` and `start.sh` defaults to `--port ${PORT:-8000}`, but Railway sets `PORT=8080`. When services communicate via **private networking** (`.railway.internal`), you must use the Railway-assigned port, not the Dockerfile default.
+
+```
+❌ WRONG: http://backend.railway.internal:8000   (Dockerfile default)
+❌ WRONG: http://backend:8000                     (no .railway.internal suffix)
+✅ RIGHT: http://backend.railway.internal:8080    (Railway-assigned port)
+```
+
+### Frontend start.sh Pattern
+
+```sh
+#!/bin/sh
+export PORT=${PORT:-80}
+export BACKEND_URL=${BACKEND_URL:-http://backend.railway.internal:8080}
+envsubst '${PORT} ${BACKEND_URL}' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf
+nginx -g 'daemon off;'
+```
+
+### How to Debug 502 Errors
+
+1. Check Railway deploy logs for `connect() failed (111: Connection refused)`
+2. Note which port is being refused — if it's 8000, you have a port mismatch
+3. Verify the `BACKEND_URL` env var on the frontend service in Railway dashboard
+4. If not set, check `frontend/start.sh` default value
+5. The correct internal URL is always: `http://<service-name>.railway.internal:8080`
+
+### Railway Private Networking Rules
+
+- Use `<service-name>.railway.internal` for service-to-service communication
+- The service name in the URL must match the Railway service name exactly
+- Port is always whatever Railway assigns via `PORT` env var (usually 8080)
+- Private networking only works within the same Railway project and environment
+
+---
+
+## Railway Service Management
+
+### Naming Conventions
+
+| Service | Railway Name | Purpose |
+|---------|-------------|---------|
+| Frontend | `frontend` | React SPA served by nginx |
+| Backend | `backend` | FastAPI API server |
+| Worker | `worker` | Background task processor |
+| Redis | `Redis` | Cache and session store |
+| Postgres | `Postgres` | Primary database |
+
+### Useful Railway CLI Commands
+
+```bash
+railway status                    # Show linked project/service
+railway service logs             # View service logs
+railway variables                # List env vars
+railway redeploy                 # Trigger redeploy
+```
+
+### Railway GraphQL API (for automation)
+
+The Railway CLI stores an access token at `~/.config/railway/config.json` under `user.accessToken`. This can be used with the GraphQL API:
+
+```bash
+curl -X POST https://backboard.railway.app/graphql/v2 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -d '{"query":"mutation { serviceUpdate(id: \"<SERVICE_ID>\", input: { name: \"new-name\" }) { id name } }"}'
+```
+
+Useful operations: rename services, update env vars, delete orphaned services, list all services in a project.
 
 ---
 
