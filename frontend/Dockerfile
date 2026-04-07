@@ -2,20 +2,20 @@ FROM node:20-alpine AS build
 
 WORKDIR /app
 
-COPY package.json ./
+COPY frontend/package.json ./
 RUN npm install
 
 ARG CACHEBUST=20260406
 ENV BUILD_ID=20260406
-COPY . .
+COPY frontend/ .
 RUN npm run build
 
 FROM nginx:alpine
 
 COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf.template /etc/nginx/conf.d/default.conf.template
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY start.sh /start.sh
+COPY frontend/nginx.conf.template /etc/nginx/conf.d/default.conf.template
+COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+COPY frontend/start.sh /start.sh
 RUN chmod +x /start.sh
 
 EXPOSE 80
