@@ -33,11 +33,18 @@ server {
     }
 
     location = /index.html {
-        add_header Cache-Control "no-cache";
+        add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0" always;
+        add_header Pragma "no-cache" always;
+        add_header Expires "0" always;
+        add_header Cross-Origin-Embedder-Policy "unsafe-none" always;
     }
 
     location / {
         try_files $uri $uri/ /index.html;
+        # Ensure index.html fallback is never cached (try_files serves from this location context)
+        add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0" always;
+        add_header Pragma "no-cache" always;
+        add_header Cross-Origin-Embedder-Policy "unsafe-none" always;
     }
 
     gzip on;
