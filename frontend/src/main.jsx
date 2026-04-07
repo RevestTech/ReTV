@@ -8,6 +8,8 @@ import App from "./App";
 import "./index.css";
 import { initializeExperiments } from "./experiments";
 
+const BUILD_TIMESTAMP = "2026-04-06T07:53:00Z";
+
 initializeExperiments();
 
 ReactDOM.createRoot(document.getElementById("root")).render(
