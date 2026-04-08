@@ -967,20 +967,54 @@ body {
   opacity: 0.9;
 }
 
-/* Mobile map */
+/* Mobile map — tablets */
 @media (max-width: 768px) {
+  .map-container {
+    height: calc(100vh - 130px);
+    min-height: 400px;
+  }
+  .map-submode-switcher {
+    padding: 8px 12px;
+    gap: 6px;
+    justify-content: center;
+  }
+  .map-submode-btn {
+    padding: 6px 14px;
+    font-size: 12px;
+  }
+  .world-map-country-label {
+    top: 12px;
+  }
+  .world-map-country-label-name {
+    font-size: 24px;
+    letter-spacing: 2px;
+  }
+  .world-map-country-label-count {
+    font-size: 13px;
+  }
   .world-map-legend {
     bottom: 8px;
     left: 8px;
     padding: 6px 10px;
   }
+  .world-map-legend-title {
+    font-size: 9px;
+  }
   .world-map-legend-items {
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 4px;
+  }
+  .world-map-legend-item {
+    font-size: 10px;
   }
   .world-map-controls {
     bottom: 8px;
     right: 8px;
+  }
+  .world-map-zoom-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
   }
   .world-map-preview-panel {
     top: auto;
@@ -989,6 +1023,75 @@ body {
     left: 0;
     width: 100%;
     border-radius: 12px 12px 0 0;
+  }
+}
+
+/* Mobile map — phones */
+@media (max-width: 480px) {
+  .map-container {
+    height: calc(100vh - 120px);
+    height: calc(100dvh - 120px);
+    min-height: 300px;
+  }
+  .map-submode-switcher {
+    padding: 6px 10px;
+    gap: 6px;
+  }
+  .map-submode-btn {
+    padding: 5px 12px;
+    font-size: 11px;
+    flex: 1;
+    text-align: center;
+    justify-content: center;
+  }
+  .world-map-country-label {
+    top: 8px;
+    width: 90%;
+  }
+  .world-map-country-label-name {
+    font-size: 20px;
+    letter-spacing: 1.5px;
+  }
+  .world-map-country-label-count {
+    font-size: 12px;
+    margin-top: 2px;
+  }
+  .world-map-legend {
+    bottom: 6px;
+    left: 6px;
+    padding: 5px 8px;
+    max-width: 55%;
+  }
+  .world-map-legend-title {
+    font-size: 8px;
+    margin-bottom: 2px;
+  }
+  .world-map-legend-items {
+    gap: 3px;
+  }
+  .world-map-legend-item {
+    font-size: 9px;
+    gap: 3px;
+  }
+  .world-map-legend-color {
+    width: 10px;
+    height: 7px;
+  }
+  .world-map-controls {
+    bottom: 6px;
+    right: 6px;
+    gap: 3px;
+  }
+  .world-map-zoom-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+  .world-map-zoom-reset {
+    font-size: 9px;
+    padding: 4px 6px;
+    width: 28px;
+    height: auto;
   }
 }
 
