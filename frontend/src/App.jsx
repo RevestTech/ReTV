@@ -11,6 +11,7 @@ import FavoritesView from "./components/FavoritesView";
 import RecentlyPlayed from "./components/RecentlyPlayed";
 import BackToTop from "./components/BackToTop";
 import AISearchModal from "./components/AISearchModal";
+import WorldMap from "./components/WorldMap";
 import TVDebugInfo from "./components/TVDebugInfo";
 import useFavorites, { useRadioFavorites } from "./hooks/useFavorites";
 import useRecentlyPlayed from "./hooks/useRecentlyPlayed";
@@ -393,7 +394,7 @@ export default function App() {
   }, [search, activeCategories, activeCountries, showFavorites, activeQualities]);
 
   useEffect(() => {
-    if (mode === "radio") loadRadioMeta();
+    if (mode === "radio" || mode === "map") loadRadioMeta();
   }, [mode, loadRadioMeta]);
 
   useEffect(() => {
@@ -533,6 +534,10 @@ export default function App() {
       setRadioModalOpen(true);
       popPlayerState();
     }
+    // When switching to map, remember the previous mode (tv/radio) for the map's data source
+    if (newMode === "map" && mode !== "map") {
+      setMapSubMode(mode === "radio" ? "radio" : "tv");
+    }
     setMode(newMode);
   };
 
@@ -578,6 +583,9 @@ export default function App() {
     if (guestNoticeTimerRef.current) clearTimeout(guestNoticeTimerRef.current);
   }, []);
 
+  // Map mode sub-mode (remembers tv/radio when switching to map)
+  const [mapSubMode, setMapSubMode] = useState("tv");
+
   // AI Search state
   const [showAISearch, setShowAISearch] = useState(false);
 
@@ -588,6 +596,32 @@ export default function App() {
       handleSelectStation(item);
     }
   }, [mode, openTvPlayer, handleSelectStation]);
+
+  // Map country selection — switches to tv/radio mode with country filter applied
+  const handleMapCountrySelect = useCallback((countryCode) => {
+    const targetMode = mapSubMode;
+    if (targetMode === "tv") {
+      setActiveCountries((prev) =>
+        prev.includes(countryCode) ? prev.filter((c) => c !== countryCode) : [...prev, countryCode]
+      );
+    } else {
+      setActiveRadioCountries((prev) =>
+        prev.includes(countryCode) ? prev.filter((c) => c !== countryCode) : [...prev, countryCode]
+      );
+    }
+  }, [mapSubMode]);
+
+  const handleMapViewChannels = useCallback((countryCode) => {
+    setActiveCountries([countryCode]);
+    setMode("tv");
+    setShowFavorites(false);
+  }, []);
+
+  const handleMapViewStations = useCallback((countryCode) => {
+    setActiveRadioCountries([countryCode]);
+    setMode("radio");
+    setShowRadioFavorites(false);
+  }, []);
 
   return (
     <>
@@ -670,6 +704,32 @@ export default function App() {
               onToggleRadioFavorite={toggleRadioFavorite}
               onClearFavorites={() => { setShowFavorites(false); setShowRadioFavorites(false); }}
             />
+          ) : mode === "map" ? (
+            <div className="map-container">
+              <div className="map-submode-switcher">
+                <button
+                  className={`map-submode-btn ${mapSubMode === "tv" ? "active" : ""}`}
+                  onClick={() => setMapSubMode("tv")}
+                >
+                  TV Channels
+                </button>
+                <button
+                  className={`map-submode-btn ${mapSubMode === "radio" ? "active" : ""}`}
+                  onClick={() => setMapSubMode("radio")}
+                >
+                  Radio Stations
+                </button>
+              </div>
+              <WorldMap
+                mode={mapSubMode}
+                countries={countries}
+                radioCountries={radioCountries}
+                activeCountries={mapSubMode === "tv" ? activeCountries : activeRadioCountries}
+                onSelectCountry={handleMapCountrySelect}
+                onSelectChannel={(ch) => { setMode("tv"); openTvPlayer(ch); }}
+                onSelectStation={(st) => { setMode("radio"); handleSelectStation(st); }}
+              />
+            </div>
           ) : mode === "tv" ? (
             <ChannelGrid
               channels={channels}
