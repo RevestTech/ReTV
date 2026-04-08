@@ -157,8 +157,22 @@ export BACKEND_URL=${BACKEND_URL:-http://backend.railway.internal:8080}
 ```
 Or set `BACKEND_URL=http://backend.railway.internal:8080` as an environment variable on the frontend service in Railway.
 
+### Issue: Black screen on iOS Safari / iPhone
+**Cause**: Multiple factors combined to break mobile rendering:
+1. `height: -webkit-fill-available` on `#root` can compute to 0 on certain iOS Safari versions, and with `overflow: hidden` all content is clipped invisible
+2. Synchronous `<script>` tags (Chromecast SDK, IMA SDK) block the HTML parser on iOS Safari — if the script stalls, nothing renders
+3. CSS `dvh` units without `vh` fallbacks break on older iOS Safari (<15.4)
+4. Nginx `Cache-Control: no-cache` on `location = /index.html` doesn't apply when `try_files` serves index.html from `location /` context — causing Safari to cache stale HTML indefinitely
+
+**Fix (v2.5.2)**:
+- Replace `-webkit-fill-available` with `100vh` + `100dvh` in `#root`
+- Make all external SDK scripts `async defer`
+- Add `vh` fallbacks before all `dvh` CSS declarations
+- Add aggressive no-cache headers to `location /` block in nginx
+- Add inline loading fallback and error handler in `index.html`
+
 ### Issue: SSL certificate errors
-**Cause**: Railway hasn't provisioned SSL for new domain  
+**Cause**: Railway hasn't provisioned SSL for new domain
 **Fix**: Wait 2-5 minutes after adding domain, Railway auto-provisions Let's Encrypt certs
 
 ## Current Architecture (Updated 2026-04-07)

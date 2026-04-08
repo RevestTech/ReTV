@@ -1,11 +1,12 @@
 # Adajoon Deployment & Railway Patterns
 
-**Version**: 1.1.0 (Updated: 2026-04-07)
+**Version**: 1.2.0 (Updated: 2026-04-07)
 
 **Skill Type:** Deployment, Infrastructure, Docker
 **Auto-triggers:** When working with Dockerfiles, Railway configuration, deployment scripts, nginx configs, or environment variables
 
 ## Changelog
+- v1.2.0 (2026-04-07): Added iOS Safari compatibility rules, nginx caching gotcha (`try_files` location context), and mobile debugging patterns after black screen incident
 - v1.1.0 (2026-04-07): Added Railway port mapping gotcha, private networking patterns, service naming, and Railway API/CLI usage notes after 502 incident
 - v1.0.1 (2026-04-04): Added environment variable parity checklist after worker JWT_SECRET incident
 - v1.0.0 (2026-04-04): Initial versioning - established baseline deployment patterns
@@ -366,6 +367,14 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
+    # Redirect non-www to www (only in production)
+    if ($host = 'adajoon.com') {
+        return 301 https://www.adajoon.com$request_uri;
+    }
+
+    # Security headers
+    add_header Cross-Origin-Embedder-Policy "unsafe-none" always;
+
     # Proxy /api/* to backend
     location /api/ {
         proxy_pass ${BACKEND_URL}/api/;
@@ -376,25 +385,35 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_read_timeout 120s;
+        proxy_connect_timeout 10s;
         proxy_buffering on;
         proxy_buffer_size 8k;
         proxy_buffers 8 16k;
     }
 
-    # Cache static assets
+    # Cache static assets (hashed filenames — safe to cache forever)
     location /assets/ {
         add_header Cache-Control "public, max-age=31536000, immutable";
         try_files $uri =404;
     }
 
-    # No cache for index.html
+    # No cache for index.html (direct access)
     location = /index.html {
-        add_header Cache-Control "no-cache";
+        add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0" always;
+        add_header Pragma "no-cache" always;
+        add_header Expires "0" always;
+        add_header Cross-Origin-Embedder-Policy "unsafe-none" always;
     }
 
-    # SPA fallback
+    # SPA fallback — MUST also have no-cache headers
+    # ⚠️ CRITICAL: try_files serves index.html from THIS location context,
+    # NOT from `location = /index.html`. Without no-cache here, browsers
+    # (especially iOS Safari) will cache stale HTML indefinitely.
     location / {
         try_files $uri $uri/ /index.html;
+        add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0" always;
+        add_header Pragma "no-cache" always;
+        add_header Cross-Origin-Embedder-Policy "unsafe-none" always;
     }
 
     # Gzip compression
@@ -402,11 +421,28 @@ server {
     gzip_vary on;
     gzip_min_length 256;
     gzip_comp_level 5;
-    gzip_types text/plain text/css application/json application/javascript 
-               text/xml application/xml application/xml+rss text/javascript 
+    gzip_types text/plain text/css application/json application/javascript
+               text/xml application/xml application/xml+rss text/javascript
                image/svg+xml;
 }
 ```
+
+### ⚠️ Nginx `try_files` Caching Gotcha (CRITICAL)
+
+When using `try_files $uri $uri/ /index.html` for SPA routing, `Cache-Control` headers
+set in `location = /index.html` do **NOT** apply. Nginx serves the file from the
+**matching location block** (`location /`), not the named file's location. This caused
+a major iOS Safari caching bug where users saw a stale black-screen HTML for days.
+
+**Rule**: Always add no-cache headers to the `location /` block when using `try_files`.
+
+### iOS Safari / Mobile Compatibility Rules
+
+1. **Never use `height: -webkit-fill-available`** — can compute to 0 on iOS Safari, causing invisible content with `overflow: hidden`. Use `100vh` + `100dvh` instead.
+2. **Always load external SDKs with `async defer`** — synchronous scripts block the iOS Safari HTML parser. If the script stalls (CDN slow, not supported), the entire page is blank.
+3. **Always provide `vh` fallbacks before `dvh`** — `dvh` is only supported on iOS 15.4+.
+4. **Include inline fallback content** in `<div id="root">` — visible text that shows while React loads, so failures aren't invisible black screens.
+5. **Include inline `window.onerror`** — catches and displays JS errors visually for mobile debugging (no dev tools available).
 
 **Template Substitution Script (start.sh):**
 ```bash

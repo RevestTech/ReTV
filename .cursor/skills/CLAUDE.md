@@ -31,7 +31,9 @@ Railway Project: Adajoon (production)
 ├── Postgres      (primary DB, with volume)
 ├── frontend      (nginx → React SPA)
 │   ├── Public: adajoon-production.up.railway.app
-│   └── Proxies /api/* → backend.railway.internal:8080
+│   ├── Proxies /api/* → backend.railway.internal:8080
+│   ├── Server-side 301 redirect: adajoon.com → www.adajoon.com
+│   └── Aggressive no-cache headers on index.html (all location contexts)
 ├── backend       (FastAPI/Uvicorn)
 │   ├── Public: adajoon.com / www.adajoon.com
 │   ├── Handles /api/* routes
@@ -44,6 +46,12 @@ Railway Project: Adajoon (production)
 2. `adajoon-production.up.railway.app` → Frontend (serves SPA + proxies API to backend)
 
 **Critical**: Service-to-service communication uses Railway private networking on port **8080** (not 8000). Example: `http://backend.railway.internal:8080`
+
+### iOS Safari / Mobile Compatibility (Added 2026-04-07)
+- **CSS heights**: Use `100vh` fallback before `100dvh` — never use `-webkit-fill-available` on height (can compute to 0 on iOS)
+- **External scripts**: Always load third-party SDKs (Chromecast, IMA, etc.) with `async defer` — sync scripts block iOS Safari parser
+- **Nginx caching**: `location = /index.html` no-cache headers do NOT apply when `try_files` serves from `location /` — must add no-cache to catch-all block
+- **Diagnostics**: `index.html` includes inline loading fallback and `window.onerror` handler for visible error reporting
 
 ---
 
@@ -921,6 +929,6 @@ Use your editor's search (Cmd/Ctrl+F) to find:
 ## Version
 
 Created for Adajoon v2.3.0 (April 2026)
-Last updated: 2026-04-04
+Last updated: 2026-04-07 (v2.5.2 — iOS Safari fix, nginx caching fix)
 
 Skills are continuously improved through the [Skill Improvement](#skill-improvement) process.

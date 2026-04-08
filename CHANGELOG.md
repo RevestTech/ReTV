@@ -5,6 +5,19 @@ All notable changes to Adajoon will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.2] - 2026-04-07
+
+### Fixed
+- **Black screen on iOS Safari (iPhone)**: Removed `height: -webkit-fill-available` from `#root` which computed to 0 on certain iOS Safari versions, clipping all content. Replaced with standard `100vh` + `100dvh` fallback
+- **Stale HTML cached on mobile**: Nginx `Cache-Control: no-cache` only applied to `location = /index.html` but not when served via `try_files` fallback from `location /`. Added aggressive no-cache headers (`no-store, must-revalidate`) to the catch-all location block
+- **External scripts blocking iOS rendering**: Made Chromecast SDK and Google IMA SDK scripts `async defer` to prevent parser-blocking on iOS Safari
+- **CSS `dvh` units without fallback**: Added `vh` fallbacks before all `dvh` declarations in sidebar and modal mobile styles
+
+### Added
+- Inline loading fallback ("Loading Adajoon...") in `index.html` visible until React mounts
+- Inline `window.onerror` handler that displays JavaScript errors visually for debugging
+- Server-side non-www to www redirect in nginx config (`return 301`)
+
 ## [2.5.1] - 2026-04-07
 
 ### Fixed
