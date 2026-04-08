@@ -854,7 +854,7 @@ export default function App() {
       )}
       {showAISearch && (
         <AISearchModal
-          mode={mode}
+          mode={mode === "map" ? (mapSubMode || "tv") : mode}
           onSelect={handleAISelect}
           onClose={() => setShowAISearch(false)}
         />

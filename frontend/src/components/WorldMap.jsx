@@ -217,7 +217,7 @@ const WorldMap = ({
       <svg
         ref={svgRef}
         className="world-map-svg"
-        viewBox="0 0 800 400"
+        viewBox="0 0 1000 500"
         width="100%"
         height="100%"
         style={{
