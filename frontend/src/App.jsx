@@ -597,17 +597,16 @@ export default function App() {
     }
   }, [mode, openTvPlayer, handleSelectStation]);
 
-  // Map country selection — switches to tv/radio mode with country filter applied
+  // Map country selection — navigates to tv/radio list filtered by country
   const handleMapCountrySelect = useCallback((countryCode) => {
-    const targetMode = mapSubMode;
-    if (targetMode === "tv") {
-      setActiveCountries((prev) =>
-        prev.includes(countryCode) ? prev.filter((c) => c !== countryCode) : [...prev, countryCode]
-      );
+    if (mapSubMode === "tv") {
+      setActiveCountries([countryCode]);
+      setMode("tv");
+      setShowFavorites(false);
     } else {
-      setActiveRadioCountries((prev) =>
-        prev.includes(countryCode) ? prev.filter((c) => c !== countryCode) : [...prev, countryCode]
-      );
+      setActiveRadioCountries([countryCode]);
+      setMode("radio");
+      setShowRadioFavorites(false);
     }
   }, [mapSubMode]);
 
