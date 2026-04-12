@@ -21,6 +21,7 @@ import { useAuth } from "./hooks/useAuth";
 import { useVotes } from "./hooks/useVotes";
 import { useDevice } from "./hooks/useDevice";
 import { useTVNavigation } from "./hooks/useTVNavigation";
+import { useSessionTracking } from "./hooks/useSessionTracking";
 import {
   readUrlParams,
   writeUrlParams,
@@ -108,6 +109,8 @@ export default function App() {
 
   const auth = useAuth();
   const isGuest = !auth.user;
+
+  useSessionTracking();
 
   const handleViewToggle = (v) => {
     setViewMode(v);

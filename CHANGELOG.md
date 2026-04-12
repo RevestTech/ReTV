@@ -17,6 +17,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Only available on desktop devices (not mobile/TV)
   - Accessible via "Pop Out" button in video/radio player controls
 
+- **Enhanced Session Tracking**: Comprehensive user engagement analytics via Mixpanel
+  - Session duration tracking (total, active, idle time)
+  - Activity detection (mouse, keyboard, touch, scroll)
+  - Tab visibility tracking (hidden/visible states)
+  - 60-second heartbeats for real-time engagement monitoring
+  - Engagement rate calculation (active time / total time)
+  - Session summary on exit with full metrics
+  - Complements existing playback tracking (30-second heartbeats per channel/station)
+  - See `docs/ANALYTICS_TRACKING.md` for full event reference
+
+- **Admin Dashboard**: Real-time statistics and user management
+  - User counts by provider (Google, Apple, Passkey)
+  - Active users (24h, 7d, 30d)
+  - System health monitoring (database, Redis, uptime)
+  - Content statistics (channels, stations, categories)
+  - Recent activity timeline
+  - User management (promote/revoke admin)
+  - Only visible to admin users (`is_admin` flag)
+  - Accessible via user avatar dropdown menu
+
 ## [2.5.2] - 2026-04-07
 
 ### Fixed
