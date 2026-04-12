@@ -8,6 +8,7 @@ export default function AdminDashboard({ onClose }) {
   const [userStats, setUserStats] = useState(null);
   const [contentStats, setContentStats] = useState(null);
   const [activityStats, setActivityStats] = useState(null);
+  const [analyticsStats, setAnalyticsStats] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [timePeriod, setTimePeriod] = useState(30);
 
@@ -22,6 +23,8 @@ export default function AdminDashboard({ onClose }) {
       loadContentStats();
     } else if (activeTab === "activity") {
       loadActivityStats();
+    } else if (activeTab === "analytics") {
+      loadAnalyticsStats();
     }
   }, [activeTab, timePeriod]);
 
@@ -70,6 +73,30 @@ export default function AdminDashboard({ onClose }) {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       setActivityStats(data);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const loadAnalyticsStats = async () => {
+    try {
+      const [summaryRes, eventsRes, contentRes] = await Promise.all([
+        authenticatedFetch(`/api/admin/analytics/summary?days=${timePeriod}`),
+        authenticatedFetch(`/api/admin/analytics/events-over-time?days=${timePeriod}`),
+        authenticatedFetch(`/api/admin/analytics/top-content?days=${timePeriod}&limit=10`)
+      ]);
+      
+      if (!summaryRes.ok || !eventsRes.ok || !contentRes.ok) {
+        throw new Error('Failed to load analytics');
+      }
+      
+      const [summary, events, content] = await Promise.all([
+        summaryRes.json(),
+        eventsRes.json(),
+        contentRes.json()
+      ]);
+      
+      setAnalyticsStats({ summary, events, content });
     } catch (err) {
       setError(err.message);
     }
@@ -134,9 +161,15 @@ export default function AdminDashboard({ onClose }) {
           >
             Activity
           </button>
+          <button
+            className={`admin-tab ${activeTab === "analytics" ? "active" : ""}`}
+            onClick={() => setActiveTab("analytics")}
+          >
+            Analytics
+          </button>
         </div>
 
-        {(activeTab === "users" || activeTab === "activity") && (
+        {(activeTab === "users" || activeTab === "activity" || activeTab === "analytics") && (
           <div className="admin-period-selector">
             <label>Time Period:</label>
             <select value={timePeriod} onChange={(e) => setTimePeriod(Number(e.target.value))}>
@@ -401,6 +434,92 @@ export default function AdminDashboard({ onClose }) {
                           <td>{item.vote_type}</td>
                           <td>{item.item_type}</td>
                           <td>{item.count}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "analytics" && analyticsStats && (
+            <div className="admin-analytics">
+              <div className="admin-section">
+                <h2>Analytics Summary</h2>
+                <div className="admin-stats-grid">
+                  <div className="admin-stat-card">
+                    <div className="admin-stat-label">Total Events</div>
+                    <div className="admin-stat-value">{analyticsStats.summary.total_events.toLocaleString()}</div>
+                  </div>
+                  <div className="admin-stat-card">
+                    <div className="admin-stat-label">Unique Sessions</div>
+                    <div className="admin-stat-value">{analyticsStats.summary.unique_sessions.toLocaleString()}</div>
+                  </div>
+                  <div className="admin-stat-card">
+                    <div className="admin-stat-label">Unique Users</div>
+                    <div className="admin-stat-value">{analyticsStats.summary.unique_users.toLocaleString()}</div>
+                  </div>
+                  <div className="admin-stat-card">
+                    <div className="admin-stat-label">Avg Session Duration</div>
+                    <div className="admin-stat-value">
+                      {Math.round(analyticsStats.summary.avg_session_duration_seconds / 60)}m
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="admin-section">
+                <h2>Top Events</h2>
+                <div className="admin-chart-simple">
+                  {analyticsStats.summary.top_events.map((event) => {
+                    const maxCount = analyticsStats.summary.top_events[0]?.count || 1;
+                    return (
+                      <div key={event.event_name} className="admin-chart-bar">
+                        <span className="admin-chart-label">{event.event_name}</span>
+                        <div className="admin-chart-bar-fill" style={{ width: `${(event.count / maxCount) * 100}%` }}>
+                          <span className="admin-chart-value">{event.count.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="admin-section">
+                <h2>Events Over Time</h2>
+                <div className="admin-chart-simple">
+                  {analyticsStats.events.map((day) => {
+                    const maxCount = Math.max(...analyticsStats.events.map(d => d.count));
+                    return (
+                      <div key={day.date} className="admin-chart-bar">
+                        <span className="admin-chart-label">{new Date(day.date).toLocaleDateString()}</span>
+                        <div className="admin-chart-bar-fill" style={{ width: `${(day.count / maxCount) * 100}%` }}>
+                          <span className="admin-chart-value">{day.count.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="admin-section">
+                <h2>Most Watched Content</h2>
+                <div className="admin-table">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Content</th>
+                        <th>Type</th>
+                        <th>Plays</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {analyticsStats.content.map((item, idx) => (
+                        <tr key={idx}>
+                          <td>{item.item_name || 'Unknown'}</td>
+                          <td>{item.item_type || 'N/A'}</td>
+                          <td>{item.play_count}</td>
                         </tr>
                       ))}
                     </tbody>
