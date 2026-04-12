@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
 
-export default function UserMenu({ user, onLogout, onLogin }) {
+export default function UserMenu({ user, onLogout, onLogin, onOpenAdmin }) {
   const [open, setOpen] = useState(false);
   const [passkeyMsg, setPasskeyMsg] = useState("");
   const menuRef = useRef(null);
@@ -59,6 +59,16 @@ export default function UserMenu({ user, onLogout, onLogin }) {
             <span className="user-dropdown-email">{user.email}</span>
           </div>
           <div className="user-dropdown-divider" />
+          {user.is_admin && onOpenAdmin && (
+            <button className="user-dropdown-item" onClick={() => { setOpen(false); onOpenAdmin(); }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                <path d="M2 17l10 5 10-5" />
+                <path d="M2 12l10 5 10-5" />
+              </svg>
+              Admin Dashboard
+            </button>
+          )}
           {window.PublicKeyCredential && (
             <button className="user-dropdown-item" onClick={handleRegisterPasskey}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

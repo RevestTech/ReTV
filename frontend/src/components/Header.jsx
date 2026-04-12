@@ -8,6 +8,7 @@ export default function Header({
   user, onLogin, onLogout,
   showFavorites, onToggleFavorites, favoritesCount, isGuest, onGuestNotice,
   onOpenAISearch,
+  onOpenAdmin,
 }) {
   const [localSearch, setLocalSearch] = useState(search);
   const debounceRef = useRef(null);
@@ -131,7 +132,7 @@ export default function Header({
         </button>
       </div>
       <div className="header-user">
-        <UserMenu user={user} onLogin={onLogin} onLogout={onLogout} />
+        <UserMenu user={user} onLogin={onLogin} onLogout={onLogout} onOpenAdmin={onOpenAdmin} />
       </div>
     </header>
   );

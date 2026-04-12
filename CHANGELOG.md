@@ -5,6 +5,18 @@ All notable changes to Adajoon will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Floating Player (Desktop Only)**: Pop-out player for TV channels and radio stations
+  - Draggable window that stays on top while browsing
+  - Resizable from 280x160 to 800x600 pixels
+  - Dock back to main player with one click
+  - Position and size preferences saved locally
+  - Keyboard shortcut support (Escape to close)
+  - Only available on desktop devices (not mobile/TV)
+  - Accessible via "Pop Out" button in video/radio player controls
+
 ## [2.5.2] - 2026-04-07
 
 ### Fixed

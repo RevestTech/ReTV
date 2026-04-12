@@ -14,6 +14,11 @@ class User(Base):
     provider = Column(String(50), default="google")
     provider_id = Column(String(255), default="")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    last_login_at = Column(DateTime(timezone=True), default=None)
+    
+    # Roles and permissions
+    is_admin = Column(Boolean, default=False, index=True)
+    role = Column(String(50), default="user", index=True)  # user, moderator, admin
     
     # Parental controls
     kids_mode_enabled = Column(Boolean, default=False)

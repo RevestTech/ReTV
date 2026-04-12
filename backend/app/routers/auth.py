@@ -202,8 +202,16 @@ async def google_login(request: Request, response: Response, body: GoogleTokenRe
     if user:
         user.name = name
         user.picture = picture
+        user.last_login_at = datetime.now(timezone.utc)
     else:
-        user = User(email=email, name=name, picture=picture, provider="google", provider_id=google_id)
+        user = User(
+            email=email, 
+            name=name, 
+            picture=picture, 
+            provider="google", 
+            provider_id=google_id,
+            last_login_at=datetime.now(timezone.utc)
+        )
         db.add(user)
 
     await db.commit()
@@ -314,8 +322,16 @@ async def apple_login(request: Request, response: Response, body: AppleTokenRequ
     if user:
         if body.user_name:
             user.name = body.user_name
+        user.last_login_at = datetime.now(timezone.utc)
     else:
-        user = User(email=email, name=name, picture="", provider="apple", provider_id=apple_id)
+        user = User(
+            email=email, 
+            name=name, 
+            picture="", 
+            provider="apple", 
+            provider_id=apple_id,
+            last_login_at=datetime.now(timezone.utc)
+        )
         db.add(user)
 
     await db.commit()
@@ -444,12 +460,14 @@ async def passkey_login(body: PasskeyLoginBody, response: Response, db: AsyncSes
         raise HTTPException(status_code=400, detail="Authentication verification failed")
 
     passkey.sign_count = verification.new_sign_count
-    await db.commit()
 
     user_result = await db.execute(select(User).where(User.id == passkey.user_id))
     user = user_result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=400, detail="User not found")
+
+    user.last_login_at = datetime.now(timezone.utc)
+    await db.commit()
 
     token = create_token(user.id, user.email)
     _set_auth_cookies(response, user, token)

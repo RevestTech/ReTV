@@ -6,6 +6,8 @@ import RadioGrid from "./components/RadioGrid";
 import VideoPlayer from "./components/VideoPlayer";
 import RadioPlayer from "./components/RadioPlayer";
 import MiniPlayer from "./components/MiniPlayer";
+import FloatingPlayer from "./components/FloatingPlayer";
+import AdminDashboard from "./components/AdminDashboard";
 import GuestNoticeToast from "./components/GuestNoticeToast";
 import FavoritesView from "./components/FavoritesView";
 import RecentlyPlayed from "./components/RecentlyPlayed";
@@ -145,7 +147,10 @@ export default function App() {
   const [selectedStation, setSelectedStation] = useState(null);
   const [radioModalOpen, setRadioModalOpen] = useState(true);
   const [tvModalOpen, setTvModalOpen] = useState(true);
+  const [floatingTv, setFloatingTv] = useState(false);
+  const [floatingRadio, setFloatingRadio] = useState(false);
   const radioAudioRef = useRef(null);
+  const videoRef = useRef(null);
   const [showRadioFavorites, setShowRadioFavorites] = useState(IU.showRadioFavorites);
 
   const nowPlaying =
@@ -489,7 +494,18 @@ export default function App() {
 
   const closeTvPlayer = useCallback(() => {
     setSelectedChannel(null);
+    setFloatingTv(false);
     popPlayerState();
+  }, []);
+
+  const handlePopOutTv = useCallback(() => {
+    setFloatingTv(true);
+    setTvModalOpen(false);
+  }, []);
+
+  const handleDockTv = useCallback(() => {
+    setFloatingTv(false);
+    setTvModalOpen(true);
   }, []);
 
   const stopRadio = useCallback(() => {
@@ -501,7 +517,18 @@ export default function App() {
     }
     setSelectedStation(null);
     setRadioModalOpen(true);
+    setFloatingRadio(false);
     popPlayerState();
+  }, []);
+
+  const handlePopOutRadio = useCallback(() => {
+    setFloatingRadio(true);
+    setRadioModalOpen(false);
+  }, []);
+
+  const handleDockRadio = useCallback(() => {
+    setFloatingRadio(false);
+    setRadioModalOpen(true);
   }, []);
 
   const handleSelectStation = useCallback((station) => {
@@ -588,6 +615,9 @@ export default function App() {
 
   // AI Search state
   const [showAISearch, setShowAISearch] = useState(false);
+  
+  // Admin dashboard state
+  const [showAdminDashboard, setShowAdminDashboard] = useState(false);
 
   const handleAISelect = useCallback((item) => {
     if (mode === "tv") {
@@ -643,6 +673,7 @@ export default function App() {
         isGuest={isGuest}
         onGuestNotice={onGuestNotice}
         onOpenAISearch={() => setShowAISearch(true)}
+        onOpenAdmin={() => setShowAdminDashboard(true)}
       />
       {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
       <div className="layout">
@@ -790,13 +821,15 @@ export default function App() {
           )}
         </main>
       </div>
-      {selectedChannel && (
+      {selectedChannel && !floatingTv && (
         <VideoPlayer
           channel={selectedChannel}
           countries={countries}
+          videoRef={videoRef}
           minimized={!tvModalOpen}
           onMinimize={() => setTvModalOpen(false)}
           onExpand={() => setTvModalOpen(true)}
+          onPopOut={device.isDesktop ? handlePopOutTv : undefined}
           onClose={closeTvPlayer}
           isFavorite={isFavorite(selectedChannel.id)}
           onToggleFavorite={() => toggleFavorite(selectedChannel)}
@@ -808,13 +841,24 @@ export default function App() {
           onVote={votes.submitVote}
         />
       )}
-      {selectedStation && (
+      {selectedChannel && floatingTv && (
+        <FloatingPlayer
+          variant="tv"
+          channel={selectedChannel}
+          countries={countries}
+          videoRef={videoRef}
+          onClose={closeTvPlayer}
+          onDock={handleDockTv}
+        />
+      )}
+      {selectedStation && !floatingRadio && (
         <RadioPlayer
           station={selectedStation}
           countries={radioCountries}
           audioRef={radioAudioRef}
           minimized={!radioModalOpen}
           onMinimize={() => setRadioModalOpen(false)}
+          onPopOut={device.isDesktop ? handlePopOutRadio : undefined}
           onClose={stopRadio}
           isFavorite={isRadioFavorite(selectedStation.id)}
           onToggleFavorite={() => toggleRadioFavorite(selectedStation)}
@@ -824,6 +868,16 @@ export default function App() {
           myVotes={votes.getMyVotesFor("radio", selectedStation.id)}
           voteSummary={votes.getSummaryFor("radio", selectedStation.id)}
           onVote={votes.submitVote}
+        />
+      )}
+      {selectedStation && floatingRadio && (
+        <FloatingPlayer
+          variant="radio"
+          station={selectedStation}
+          countries={radioCountries}
+          audioRef={radioAudioRef}
+          onClose={stopRadio}
+          onDock={handleDockRadio}
         />
       )}
       {nowPlaying && !nowPlaying.modalOpen && (
@@ -858,11 +912,16 @@ export default function App() {
           onClose={() => setShowAISearch(false)}
         />
       )}
+      {showAdminDashboard && (
+        <AdminDashboard
+          onClose={() => setShowAdminDashboard(false)}
+        />
+      )}
       <BackToTop />
       <TVDebugInfo />
       <footer className="app-footer">
         <span>&copy; {new Date().getFullYear()} Revest Technology. All rights reserved.</span>
-        <span className="footer-version">v2.5.0</span>
+        <span className="footer-version">v2.6.0-dev</span>
       </footer>
     </>
   );
