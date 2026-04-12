@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { authenticatedFetch } from "../utils/csrf";
 
 export default function AdminDashboard({ onClose }) {
@@ -12,23 +12,7 @@ export default function AdminDashboard({ onClose }) {
   const [activeTab, setActiveTab] = useState("overview");
   const [timePeriod, setTimePeriod] = useState(30);
 
-  useEffect(() => {
-    loadOverview();
-  }, []);
-
-  useEffect(() => {
-    if (activeTab === "users") {
-      loadUserStats();
-    } else if (activeTab === "content") {
-      loadContentStats();
-    } else if (activeTab === "activity") {
-      loadActivityStats();
-    } else if (activeTab === "analytics") {
-      loadAnalyticsStats();
-    }
-  }, [activeTab, timePeriod]);
-
-  const loadOverview = async () => {
+  const loadOverview = useCallback(async () => {
     setLoading(true);
     try {
       const response = await authenticatedFetch("/api/admin/stats/overview");
@@ -43,9 +27,9 @@ export default function AdminDashboard({ onClose }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const loadUserStats = async () => {
+  const loadUserStats = useCallback(async () => {
     try {
       const response = await authenticatedFetch(`/api/admin/stats/users?days=${timePeriod}`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -54,9 +38,9 @@ export default function AdminDashboard({ onClose }) {
     } catch (err) {
       setError(err.message);
     }
-  };
+  }, [timePeriod]);
 
-  const loadContentStats = async () => {
+  const loadContentStats = useCallback(async () => {
     try {
       const response = await authenticatedFetch("/api/admin/stats/content");
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -65,9 +49,9 @@ export default function AdminDashboard({ onClose }) {
     } catch (err) {
       setError(err.message);
     }
-  };
+  }, []);
 
-  const loadActivityStats = async () => {
+  const loadActivityStats = useCallback(async () => {
     try {
       const response = await authenticatedFetch(`/api/admin/stats/activity?days=${timePeriod}`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -76,9 +60,9 @@ export default function AdminDashboard({ onClose }) {
     } catch (err) {
       setError(err.message);
     }
-  };
+  }, [timePeriod]);
 
-  const loadAnalyticsStats = async () => {
+  const loadAnalyticsStats = useCallback(async () => {
     try {
       const [summaryRes, eventsRes, contentRes] = await Promise.all([
         authenticatedFetch(`/api/admin/analytics/summary?days=${timePeriod}`),
@@ -100,7 +84,23 @@ export default function AdminDashboard({ onClose }) {
     } catch (err) {
       setError(err.message);
     }
-  };
+  }, [timePeriod]);
+
+  useEffect(() => {
+    loadOverview();
+  }, [loadOverview]);
+
+  useEffect(() => {
+    if (activeTab === "users") {
+      loadUserStats();
+    } else if (activeTab === "content") {
+      loadContentStats();
+    } else if (activeTab === "activity") {
+      loadActivityStats();
+    } else if (activeTab === "analytics") {
+      loadAnalyticsStats();
+    }
+  }, [activeTab, timePeriod, loadUserStats, loadContentStats, loadActivityStats, loadAnalyticsStats]);
 
   if (loading && !overview) {
     return (
